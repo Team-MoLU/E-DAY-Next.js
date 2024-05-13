@@ -6,7 +6,7 @@ const FetchTestComponent = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://spring-container:8080/test");
+        const response = await fetch("localhost:8080/test");
         const responseData = await response.text();
         setData(responseData);
       } catch (error) {

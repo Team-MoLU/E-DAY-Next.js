@@ -43,5 +43,5 @@ jobs:
             docker rm nextjs-container
           fi
           docker pull ${{ secrets.DOCKER_USERNAME }}/eday-nextjs
-          docker run -d --name spring-container -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/eday-nextjs
+          docker run -d --name nextjs-container -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/eday-nextjs
           docker image prune -f

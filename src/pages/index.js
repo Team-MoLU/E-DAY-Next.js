@@ -16,7 +16,7 @@ export default HomePage;
 export async function getServerSideProps() {
   try {
     // 여기서 서버 측 API 요청을 보냄
-    const response = await fetch("http://3.38.4.187:8080/test");
+    const response = await fetch("http://spring-container:8080/test");
     const apiText = await response.text(); // 문자열로 변환
 
     return {

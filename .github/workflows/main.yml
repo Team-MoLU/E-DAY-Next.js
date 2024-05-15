@@ -44,4 +44,5 @@ jobs:
           fi
           docker pull ${{ secrets.DOCKER_USERNAME }}/eday-nextjs
           docker run -d --name nextjs-container -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/eday-nextjs
+          docker network connect my-bridge nextjs-container
           docker image prune -f

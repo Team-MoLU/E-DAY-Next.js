@@ -31,3 +31,39 @@ body {
     text-wrap: balance;
   }
 }
+
+.sidebar {
+  width: 250px; /* 사이드바의 너비 */
+  height: 100vh; /* 화면의 높이를 전체 사용 */
+  background-color: #f4f4f4; /* 배경 색상 */
+  padding: 20px; /* 내부 여백 */
+  position: fixed; /* 화면의 왼쪽에 고정 */
+  top: 0;
+  left: 0;
+  overflow-y: auto; /* 내용이 넘칠 경우 스크롤 가능 */
+}
+
+.sidebar h1 {
+  font-size: 24px; /* 제목의 글자 크기 */
+  margin-bottom: 20px; /* 아래 여백 */
+  color: blue;
+}
+
+.sidebar a {
+  display: block; /* 링크를 블록 요소로 만듦 */
+  padding: 10px 0; /* 내부 여백 */
+  color: #333; /* 글자 색상 */
+  text-decoration: none; /* 밑줄 제거 */
+  font-size: 18px; /* 글자 크기 */
+}
+
+.sidebar a:hover {
+  background-color: #ddd; /* 마우스 오버 시 배경 색상 변경 */
+  color: #000; /* 마우스 오버 시 글자 색상 변경 */
+}
+
+/* 새로운 main-content 스타일 추가 */
+.main-content {
+  margin-left: 250px; /* 사이드바의 너비만큼 왼쪽 여백 추가 */
+  padding: 20px; /* 내부 여백 */
+}

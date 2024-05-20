@@ -1,7 +1,7 @@
 export default async function ApiTestPage() {
-  //const response = await fetch("http://3.38.4.187:8080/test");
-  const response = await fetch("http://spring-container:8080/test");
-  const apiText = await response.text(); // 문자열로 변환
+  const apiText = await fetch("http://spring-container:8080/test")
+    .then((response) => response.text())
+    .catch(() => "API Test fail");
 
   return (
     <div>

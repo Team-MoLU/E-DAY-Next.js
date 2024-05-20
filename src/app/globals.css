@@ -67,3 +67,15 @@ body {
   margin-left: 250px; /* 사이드바의 너비만큼 왼쪽 여백 추가 */
   padding: 20px; /* 내부 여백 */
 }
+
+.node-item {
+  cursor: pointer;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.node-item:hover {
+  background-color: #969696;
+}

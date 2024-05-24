@@ -1,0 +1,98 @@
+{
+  "root": {
+    "subNodes": [
+      {
+        "id": "1",
+        "text": "root node 1"
+      },
+      {
+        "id": "2",
+        "text": "root node 2"
+      },
+      {
+        "id": "3",
+        "text": "root node 3"
+      }
+    ]
+  },
+
+  "node": [
+    {
+      "id": "1",
+      "text": "root node 1",
+      "subNodes": [
+        {
+          "id": "11",
+          "text": "11"
+        },
+        {
+          "id": "12",
+          "text": "12"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "text": "root node 2",
+      "subNodes": [
+        {
+          "id": "21",
+          "text": "21"
+        },
+        {
+          "id": "22",
+          "text": "22"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "text": "root node 3",
+      "subNodes": [
+        {
+          "id": "31",
+          "text": "31"
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "text": "11",
+      "subNodes": [{ "id": "111", "text": "111" }]
+    },
+    {
+      "id": "12",
+      "text": "12",
+      "subNodes": [
+        { "id": "121", "text": "121" },
+        {
+          "id": "122",
+          "text": "122"
+        }
+      ]
+    },
+    { "id": "111", "text": "111", "subNodes": [] },
+    { "id": "121", "text": "121", "subNodes": [] },
+    {
+      "id": "122",
+      "text": "122",
+      "subNodes": []
+    },
+    {
+      "id": "21",
+      "text": "21",
+      "subNodes": [{ "id": "211", "text": "211" }]
+    },
+    {
+      "id": "22",
+      "text": "22",
+      "subNodes": []
+    },
+    { "id": "211", "text": "211", "subNodes": [] },
+    {
+      "id": "31",
+      "text": "31",
+      "subNodes": []
+    }
+  ]
+}

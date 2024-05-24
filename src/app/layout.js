@@ -23,6 +23,7 @@ export default function RootLayout({ children }) {
           <Link href="/achievement">달성도</Link>
           <Link href="/archive">아카이브</Link>
 
+          <Link href="/node">node</Link>
           <Link href="/login">login</Link>
           <Link href="/api-test">api test</Link>
         </div>

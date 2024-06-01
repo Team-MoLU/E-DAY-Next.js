@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
@@ -30,12 +30,12 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-}
+} */
 
 .sidebar {
   width: 250px; /* 사이드바의 너비 */
   height: 100vh; /* 화면의 높이를 전체 사용 */
-  background-color: #f4f4f4; /* 배경 색상 */
+  background-color: #cfcfcf; /* 배경 색상 */
   padding: 20px; /* 내부 여백 */
   position: fixed; /* 화면의 왼쪽에 고정 */
   top: 0;
@@ -68,7 +68,7 @@ body {
   padding: 20px; /* 내부 여백 */
 }
 
-.node-item {
+.task-item {
   cursor: pointer;
   padding: 8px;
   margin-bottom: 8px;
@@ -76,6 +76,72 @@ body {
   border-radius: 4px;
 }
 
-.node-item:hover {
-  background-color: #969696;
+.task-item:hover {
+  background-color: #aaaaaa;
+}
+
+.task-page {
+  display: flex;
+  flex-direction: row;
+  height: 94.5vh;
+}
+
+/* resizeable main & sub view */
+.main-view {
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-width: 300px;
+  max-width: 100%;
+  display: flex;
+  border: #cdcdcd 1px solid;
+  flex-direction: row;
+  background: #ffffff;
+  z-index: 2;
+}
+
+.sub-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  max-height: 100%;
+  border: #cdcdcd 1px solid;
+  border-left: none; /* 왼쪽 테두리 제거 */
+  background: #ffffff;
+  z-index: 1;
+}
+
+.main-view .main-view-content {
+  flex: 1;
+}
+
+.main-sub-view-resizer {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 6px;
+  justify-self: flex-end;
+  cursor: col-resize;
+  resize: horizontal;
+}
+
+.main-sub-view-resizer:hover {
+  width: 3px;
+  background: #c1c3c5b4;
+}
+
+/* 기본 버튼 스타일 */
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* 버튼에 마우스를 올렸을 때의 스타일 */
+button:hover {
+  background-color: #0056b3;
 }

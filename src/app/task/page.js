@@ -63,7 +63,6 @@ export default function RootTaskPage() {
         style={{
           width: isSidebarOpen ? mainViewWidth : "100%",
         }}
-        onMouseDown={(e) => e.preventDefault()}
       >
         <div className="main-view-content">
           <h1>경로 : "/{task.route.join("/")}"</h1>
@@ -78,6 +77,28 @@ export default function RootTaskPage() {
               </Link>
             ))}
           </ul>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const text = e.target.elements.text.value;
+              const updatedTask = { ...task };
+              const lastId =
+                updatedTask.subNodes.length > 0
+                  ? updatedTask.subNodes[updatedTask.subNodes.length - 1].id
+                  : 0;
+              updatedTask.subNodes.push({ id: parseInt(lastId) + 1, text });
+              setTask(updatedTask);
+              // 입력 필드 초기화
+              e.target.reset();
+            }}
+          >
+            <p>
+              <input type="text" name="text" placeholder="text" />
+            </p>
+            <p>
+              <input type="submit" value="create" />
+            </p>
+          </form>
         </div>
         {isSidebarOpen && (
           <div className="main-sub-view-resizer" onMouseDown={startResizing} />

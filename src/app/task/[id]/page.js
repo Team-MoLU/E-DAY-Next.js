@@ -1,17 +1,65 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+import { RoutesList } from "../../../components/RoutesList";
 
 export default function TaskPage(props) {
-  const [task, setTask] = useState({ text: "", route: [], subNodes: [] });
+  const [task, setTask] = useState({});
+  const [routes, setRoutes] = useState([]);
+  const [subtasks, setSubtasks] = useState([]);
+  const [newTaskName, setNewTaskName] = useState("");
 
-  useEffect(() => {
-    fetch("http://localhost:8080/node/" + props.params.id)
+  const fetchTaskData = async () => {
+    // task fetch
+    fetch("http://localhost:8080/api/v1/tasks/" + props.params.id)
       .then((resp) => resp.json())
       .then((result) => {
         setTask(result);
       });
+    // subtasks fetch
+    fetch("http://localhost:8080/api/v1/tasks/" + props.params.id + "/subtasks")
+      .then((resp) => resp.json())
+      .then((result) => {
+        setSubtasks(result.taskList);
+      });
+    // routes fetch
+    fetch("http://localhost:8080/api/v1/tasks/" + props.params.id + "/routes")
+      .then((resp) => resp.json())
+      .then((result) => {
+        result.routes.unshift({ taskId: "", name: "root" });
+        setRoutes(result.routes);
+      });
+  };
+
+  useEffect(() => {
+    fetchTaskData();
   }, [props.params.id]);
+
+  const handleCreateTask = async (e) => {
+    e.preventDefault();
+    if (!newTaskName.trim()) {
+      alert("할 일을 입력해주세요.");
+      return;
+    }
+    try {
+      const response = await fetch("http://localhost:8080/api/v1/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          parentId: props.params.id,
+          name: newTaskName.trim(),
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create task");
+      }
+      setNewTaskName("");
+      await fetchTaskData();
+    } catch (error) {
+      console.error("Error creating task:", error);
+    }
+  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -65,39 +113,42 @@ export default function TaskPage(props) {
         }}
       >
         <div className="main-view-content">
-          <h1>경로 : "/{task.route.join("/")}"</h1>
-          <h1>{task.text}</h1>
+          <RoutesList routes={routes} />
+          <h1>{task.name}</h1>
           <button onClick={toggleSidebar}>
             {isSidebarOpen ? "상세 끄기" : "상세 보기"}
           </button>
-          <ul>
-            {task.subNodes.map((subTask) => (
-              <Link href={"/task/" + subTask.id} key={subTask.id}>
-                <li className="task-item">{subTask.text}</li>
-              </Link>
-            ))}
-          </ul>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const text = e.target.elements.text.value;
-              const updatedTask = { ...task };
-              const lastId =
-                updatedTask.subNodes.length > 0
-                  ? updatedTask.subNodes[updatedTask.subNodes.length - 1].id
-                  : 0;
-              updatedTask.subNodes.push({ id: parseInt(lastId) + 1, text });
-              setTask(updatedTask);
-              // 입력 필드 초기화
-              e.target.reset();
-            }}
-          >
-            <p>
-              <input type="text" name="text" placeholder="text" />
-            </p>
-            <p>
-              <input type="submit" value="create" />
-            </p>
+          {subtasks.length === 0 ? (
+            <p>하위 할 일이 없습니다.</p>
+          ) : (
+            <ul>
+              {subtasks.map((subtask) => (
+                <li
+                  key={subtask.taskId}
+                  onContextMenu={(e) => handleContextMenu(e, subtask.taskId)}
+                  className="task-item"
+                  onClick={() =>
+                    (window.location.href = "/task/" + subtask.taskId)
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    defaultChecked={subtask.check}
+                    onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
+                  />
+                  <span>{subtask.name}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <form onSubmit={handleCreateTask}>
+            <input
+              type="text"
+              value={newTaskName}
+              onChange={(e) => setNewTaskName(e.target.value)}
+              placeholder="새로운 할 일"
+            />
+            <button type="submit">추가</button>
           </form>
         </div>
         {isSidebarOpen && (

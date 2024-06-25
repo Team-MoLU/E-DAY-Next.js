@@ -51,6 +51,35 @@ export default function RootTaskPage() {
     }
   };
 
+  const handleCheckboxChange = async (currentTask) => {
+    setSubtasks((prevSubtasks) =>
+      prevSubtasks.map((task) =>
+        task.taskId === currentTask.taskId
+          ? { ...task, check: !task.check }
+          : task
+      )
+    );
+    // // API 로 백엔드에게 check 값 변경 알림
+    // try {
+    //   const response = await fetch("http://localhost:8080/api/v1/tasks", {
+    //     method: "PATCH",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({
+    //       taskId: currentTask.taskId,
+    //       check: !currentTask.check,
+    //     }),
+    //   });
+    //   if (!response.ok) {
+    //     throw new Error("Failed to create task");
+    //   }
+    //   await fetchTasks();
+    // } catch (error) {
+    //   console.error("Error changing task check:", error);
+    // }
+  };
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
     setMainViewWidth(650);
@@ -123,8 +152,11 @@ export default function RootTaskPage() {
                 >
                   <input
                     type="checkbox"
-                    defaultChecked={task.check}
+                    checked={task.check}
                     onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
+                    onChange={(e) => {
+                      handleCheckboxChange(task);
+                    }}
                   />
                   <span>{task.name}</span>
                 </li>
@@ -150,7 +182,7 @@ export default function RootTaskPage() {
           className="sub-view"
           style={{ width: `calc(100% - ${mainViewWidth}px)` }}
         >
-          <h1>상세 페이지</h1>
+          <h1>sub 페이지</h1>
         </div>
       )}
     </div>

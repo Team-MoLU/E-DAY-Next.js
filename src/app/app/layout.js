@@ -11,6 +11,7 @@ export default function AppLayout({ children }) {
         <Link href="/app/retrospect">회고록</Link>
         <Link href="/app/achievement">달성도</Link>
         <Link href="/app/archive">아카이브</Link>
+        <Link href="/app/task">task</Link>
       </div>
       <div className="main-content">{children}</div>
     </>

@@ -1,35 +1,33 @@
 "use client";
-import { useState } from "react";
 
-export default function HomePage() {
-  const [currentNode, setCurrentNode] = useState("user");
+import { useState, useEffect } from "react";
+import { redirect } from "next/navigation";
 
-  const nodes = [
-    "밥 먹기",
-    "토익 단어 외우기",
-    "밥 먹지 말던가.... 웅....",
-    "밥 알아서 하기",
-    "집 가기 제발ㄹ 보내줘",
-  ];
+export default function RootPage() {
+  const [accessToken, setAccessToken] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(null);
 
-  const handleClick = (node) => {
-    setCurrentNode(node);
-  };
+  useEffect(() => {
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+      return null;
+    }
 
-  return (
-    <div>
-      <h1>{currentNode}</h1>
-      <ul>
-        {nodes.map((node, index) => (
-          <li
-            key={index}
-            className="node-item"
-            onClick={() => handleClick(node)}
-          >
-            {node}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+    const accessCookie = getCookie("access");
+    const refreshCookie = getCookie("refresh");
+
+    setAccessToken(accessCookie);
+    setRefreshToken(refreshCookie);
+  }, []);
+
+  if (accessToken === null || refreshToken === null) {
+    // cookie 에 accessToken 또는 refreshToken 정보가 없으면 login으로 리다이렉트
+    redirect("/login");
+  } else {
+    redirect("/app");
+  }
+  // 이 페이지는 실제로 렌더링되지 않습니다.
+  return null;
 }

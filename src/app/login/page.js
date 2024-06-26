@@ -37,7 +37,7 @@ export default function LoginPage() {
       </Link>
       <br></br>
       <br></br>
-      <Link href={DOMAIN_URI + "api/vi/login"}>
+      <Link href={DOMAIN_URI + "/api/vi/login"}>
         <button>로그인</button>
       </Link>
     </div>

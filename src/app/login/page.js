@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function LoginPage() {
+  const DOMAIN_URI = process.env.NEXT_PUBLIC_DOMAIN_URI;
   const [accessToken, setAccessToken] = useState(null);
   const [refreshToken, setRefreshToken] = useState(null);
 
@@ -31,12 +32,12 @@ export default function LoginPage() {
 
   return (
     <div>
-      <Link href="http://localhost:8080/login/oauth2/code/google">
+      <Link href={DOMAIN_URI + "/login/oauth2/code/google"}>
         <button>회원가입</button>
       </Link>
       <br></br>
       <br></br>
-      <Link href="http://localhost:8080/login">
+      <Link href={DOMAIN_URI + "/login"}>
         <button>로그인</button>
       </Link>
     </div>

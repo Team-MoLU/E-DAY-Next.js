@@ -1,15 +1,16 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { RoutesList } from "../../components/RoutesList";
+import { RoutesList } from "../../../components/RoutesList";
 
 export default function RootTaskPage() {
+  const DOMAIN_URI = process.env.NEXT_PUBLIC_DOMAIN_URI;
   const [subtasks, setSubtasks] = useState([]);
   const [routes, setRoutes] = useState([{ taskId: "", name: "root" }]);
   const [newTaskName, setNewTaskName] = useState("");
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/v1/tasks/roots");
+      const response = await fetch(DOMAIN_URI + "/api/v1/tasks/roots");
       if (!response.ok) {
         throw new Error("Failed to fetch root tasks");
       }
@@ -31,7 +32,7 @@ export default function RootTaskPage() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:8080/api/v1/tasks", {
+      const response = await fetch(DOMAIN_URI + "/api/v1/tasks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -147,7 +148,7 @@ export default function RootTaskPage() {
                   onContextMenu={(e) => handleContextMenu(e, task.taskId)}
                   className="task-item"
                   onClick={() =>
-                    (window.location.href = "/task/" + task.taskId)
+                    (window.location.href = "/app/task/" + task.taskId)
                   }
                 >
                   <input

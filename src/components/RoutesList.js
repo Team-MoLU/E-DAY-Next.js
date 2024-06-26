@@ -7,7 +7,7 @@ export const RoutesList = ({ routes }) => {
         <span key={task.taskId}>
           <span
             style={{ cursor: "pointer", color: "blue" }}
-            onClick={() => (window.location.href = "/task/" + task.taskId)}
+            onClick={() => (window.location.href = "/app/task/" + task.taskId)}
           >
             {task.name}
           </span>

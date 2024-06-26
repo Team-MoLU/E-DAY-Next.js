@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { RoutesList } from "../../../components/RoutesList";
+import { RoutesList } from "../../../../components/RoutesList";
 import { useRouter } from "next/navigation";
 
 export default function TaskPage(props) {
+  const DOMAIN_URI = process.env.NEXT_PUBLIC_DOMAIN_URI;
   const [task, setTask] = useState({});
   const [routes, setRoutes] = useState([]);
   const [subtasks, setSubtasks] = useState([]);
@@ -12,19 +13,19 @@ export default function TaskPage(props) {
 
   const fetchTaskData = async () => {
     // task fetch
-    fetch("http://localhost:8080/api/v1/tasks/" + props.params.id)
+    fetch(DOMAIN_URI + "/api/v1/tasks/" + props.params.id)
       .then((resp) => resp.json())
       .then((result) => {
         setTask(result);
       });
     // subtasks fetch
-    fetch("http://localhost:8080/api/v1/tasks/" + props.params.id + "/subtasks")
+    fetch(DOMAIN_URI + "/api/v1/tasks/" + props.params.id + "/subtasks")
       .then((resp) => resp.json())
       .then((result) => {
         setSubtasks(result.taskList);
       });
     // routes fetch
-    fetch("http://localhost:8080/api/v1/tasks/" + props.params.id + "/routes")
+    fetch(DOMAIN_URI + "/api/v1/tasks/" + props.params.id + "/routes")
       .then((resp) => resp.json())
       .then((result) => {
         result.routes.unshift({ taskId: "", name: "root" });
@@ -43,7 +44,7 @@ export default function TaskPage(props) {
       return;
     }
     try {
-      const response = await fetch("http://localhost:8080/api/v1/tasks", {
+      const response = await fetch(DOMAIN_URI + "/api/v1/tasks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,25 +77,22 @@ export default function TaskPage(props) {
   const handleDeleteTask = async (taskId, parentId) => {
     try {
       // 삭제 API 호출
-      const response = await fetch(
-        "http://localhost:8080/api/v1/tasks/delete",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            taskId: taskId,
-            cascade: true,
-          }),
-        }
-      );
+      const response = await fetch(DOMAIN_URI + "/api/v1/tasks/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          taskId: taskId,
+          cascade: true,
+        }),
+      });
       // 응답이 성공적인지 확인 후 처리
       if (!response.ok) {
         throw new Error("Failed to delete task");
       }
       // 부모 task의 URL로 클라이언트 사이드에서 이동
-      router.push("/task/" + parentId);
+      router.push("/app/task/" + parentId);
       // 추가적인 작업 수행 (예: 태스크 목록 재로딩 등)
       await fetchTasks();
     } catch (error) {
@@ -212,7 +210,7 @@ export default function TaskPage(props) {
                   onContextMenu={(e) => handleContextMenu(e, subtask.taskId)}
                   className="task-item"
                   onClick={() =>
-                    (window.location.href = "/task/" + subtask.taskId)
+                    (window.location.href = "/app/task/" + subtask.taskId)
                   }
                 >
                   <input

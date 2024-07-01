@@ -1,12 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { redirect } from "next/navigation";
 
 export default function RootPage() {
-  const [accessToken, setAccessToken] = useState(null);
-  const [refreshToken, setRefreshToken] = useState(null);
-
   useEffect(() => {
     function getCookie(name) {
       const value = `; ${document.cookie}`;
@@ -18,9 +15,7 @@ export default function RootPage() {
     const accessCookie = getCookie("access");
     const refreshCookie = getCookie("refresh");
 
-    setAccessToken(accessCookie);
-    setRefreshToken(refreshCookie);
-    if (accessToken === null || refreshToken === null) {
+    if (accessCookie === null || refreshCookie === null) {
       // cookie 에 accessToken 또는 refreshToken 정보가 없으면 login으로 리다이렉트
       redirect("/login");
     } else {

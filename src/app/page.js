@@ -20,14 +20,14 @@ export default function RootPage() {
 
     setAccessToken(accessCookie);
     setRefreshToken(refreshCookie);
-  }, []);
+    if (accessToken === null || refreshToken === null) {
+      // cookie 에 accessToken 또는 refreshToken 정보가 없으면 login으로 리다이렉트
+      redirect("/login");
+    } else {
+      redirect("/app");
+    }
+  }, []);=
 
-  if (accessToken === null || refreshToken === null) {
-    // cookie 에 accessToken 또는 refreshToken 정보가 없으면 login으로 리다이렉트
-    redirect("/login");
-  } else {
-    redirect("/app");
-  }
   // 이 페이지는 실제로 렌더링되지 않습니다.
   return null;
 }

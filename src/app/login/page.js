@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   return (
     <div>
-      <Link href={DOMAIN_URI + "/login/oauth2/code/google"}>
+      <Link href={DOMAIN_URI + "/api/v1/login/oauth2/code/google"}>
         <button>회원가입</button>
       </Link>
       <br></br>

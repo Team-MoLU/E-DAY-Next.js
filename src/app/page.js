@@ -26,7 +26,7 @@ export default function RootPage() {
     } else {
       redirect("/app");
     }
-  }, []);=
+  }, []);
 
   // 이 페이지는 실제로 렌더링되지 않습니다.
   return null;

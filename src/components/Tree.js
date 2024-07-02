@@ -1,8 +1,10 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
+import { useDispatch, useSelector } from "react-redux";
 
-const Tree = ({ data }) => {
+const Tree = () => {
+  const data = useSelector((state) => state.tasks.root);
   const svgRef = useRef();
   const gRef = useRef();
   const [root, setRoot] = useState(null);

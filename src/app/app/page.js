@@ -1,11 +1,10 @@
 "use client";
-import TaskListView from "@/components/TaskListView";
 import { useState } from "react";
 
 export default function HomePage() {
   return (
     <div>
-      <TaskListView />
+      <h1>This is Home page</h1>
     </div>
   );
 }

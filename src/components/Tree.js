@@ -1,231 +1,205 @@
-"use client";
 import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
-const Tree = () => {
+const Tree = ({ width, height }) => {
   const data = useSelector((state) => state.tasks.root);
-  const svgRef = useRef();
-  const gRef = useRef();
-  const [root, setRoot] = useState(null);
+  const svgRef = useRef(null);
+  const scaleRef = useRef(1);
+  const [, forceUpdate] = useState({});
 
   useEffect(() => {
     if (!data) return;
 
-    const width = 800;
-    const height = 600;
+    // SVG 초기화
+    d3.select(svgRef.current).selectAll("*").remove();
 
+    // SVG 생성
     const svg = d3
       .select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height);
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("viewBox", [-width / 2, -height / 2, width, height]);
 
-    const g = d3.select(gRef.current).attr("transform", "translate(40,0)");
+    // 확대를 위한 그룹 생성
+    const g = svg.append("g");
 
-    const tree = d3.tree().size([height, width - 160]);
+    // 트리구조 D3 생성
     const root = d3.hierarchy(data);
-    tree(root);
+    const links = root.links();
+    const nodes = root.descendants();
 
-    setRoot(root);
-
-    return () => {
-      // Cleanup
-    };
-  }, [data]);
-
-  useEffect(() => {
-    if (!root) return;
-
-    const updateTree = () => {
-      const tree = d3.tree().size([600, 760]);
-      tree(root);
-
-      const nodes = root.descendants();
-      const links = root.links();
-
-      // Links
-      const link = d3
-        .select(gRef.current)
-        .selectAll(".link")
-        .data(links, (d) => d.target.id);
-
-      link
-        .enter()
-        .append("path")
-        .attr("class", "link")
-        .merge(link)
-        .attr(
-          "d",
-          d3
-            .linkHorizontal()
-            .x((d) => d.y)
-            .y((d) => d.x)
-        )
-        .style("fill", "none")
-        .style("stroke", "#555")
-        .style("stroke-opacity", 0.4)
-        .style("stroke-width", "1.5px");
-
-      link.exit().remove();
-
-      // Nodes
-      const node = d3
-        .select(gRef.current)
-        .selectAll(".node")
-        .data(nodes, (d) => d.id);
-
-      const nodeEnter = node
-        .enter()
-        .append("g")
-        .attr(
-          "class",
-          (d) => `node${d.children ? " node--internal" : " node--leaf"}`
-        )
-        .attr("transform", (d) => `translate(${d.y},${d.x})`)
-        .call(
-          d3
-            .drag()
-            .subject((event, d) => ({ x: d.y, y: d.x }))
-            .on("start", dragStarted)
-            .on("drag", dragged)
-            .on("end", dragEnded)
-        );
-
-      nodeEnter
-        .append("circle")
-        .attr("r", 10)
-        .style("fill", "#999")
-        .style("stroke", "steelblue")
-        .style("stroke-width", "1.5px")
-        .on("click", (event, d) => {
-          alert(`Node ${d.data.name} clicked!`);
-        });
-
-      nodeEnter
-        .append("text")
-        .attr("dy", 3)
-        .attr("x", (d) => (d.children ? -12 : 12))
-        .style("text-anchor", (d) => (d.children ? "end" : "start"))
-        .text((d) => d.data.name)
-        .style("font", "12px sans-serif");
-
-      node
-        .merge(nodeEnter)
-        .transition()
-        .duration(500)
-        .attr("transform", (d) => `translate(${d.y},${d.x})`);
-
-      node.exit().remove();
-    };
-
-    let draggedNode = null;
-    let tempLink = null;
-
-    function dragStarted(event, d) {
-      draggedNode = d;
-      // Hide the link to the parent
-      d3.select(gRef.current)
-        .selectAll(".link")
-        .filter((l) => l.target === d)
-        .style("opacity", 0);
-    }
-
-    function dragged(event, d) {
-      const [x, y] = d3.pointer(event, gRef.current);
-      d.x = y;
-      d.y = x;
-      d3.select(event.sourceEvent.target.closest(".node")).attr(
-        "transform",
-        `translate(${x},${y})`
+    // 노드 간 동작(force)
+    const simulation = d3
+      .forceSimulation(nodes)
+      .force(
+        "link",
+        d3
+          .forceLink(links)
+          .id((d) => d.id)
+          .distance((d) => (d.source.depth === 0 ? 10 : 50))
+          .strength(1)
+      )
+      .force("charge", d3.forceManyBody().strength(-100))
+      .force("center", d3.forceCenter())
+      .force(
+        "radial",
+        d3.forceRadial((d) => d.depth * 100, 0, 0)
       );
 
-      const closestNode = findClosestNode(event);
+    // 링크 생성
+    const link = g
+      .append("g")
+      .attr("stroke", "#999")
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .style("opacity", (d) => (d.source.depth === 0 ? 0 : 1)); // 루트 노드는 숨기기
 
-      // Remove previous temp link if exists
-      if (tempLink) tempLink.remove();
+    // 노드 그룹 생성
+    const node = g
+      .append("g")
+      .selectAll("g")
+      .data(nodes)
+      .join("g")
+      .call(drag(simulation))
+      .style("opacity", (d) => (d.depth === 0 ? 0 : 1)); // // 루트 노드는 숨기기
 
-      // Create new temp link if a close node is found
-      if (closestNode && closestNode !== d && !isDescendant(d, closestNode)) {
-        tempLink = d3
-          .select(gRef.current)
-          .append("path")
-          .attr("class", "temp-link")
-          .attr(
-            "d",
-            d3
-              .linkHorizontal()
-              .x((n) => (n === d ? x : closestNode.y))
-              .y((n) => (n === d ? y : closestNode.x))({
-              source: closestNode,
-              target: d,
-            })
-          )
-          .style("fill", "none")
-          .style("stroke", "#555")
-          .style("stroke-opacity", 0.4)
-          .style("stroke-width", "1.5px")
-          .style("stroke-dasharray", "5,5");
-      }
+    function getRandomColor() {
+      const colors = [
+        "red",
+        "green",
+        "yellow",
+        "purple",
+        "orange",
+        "pink",
+        "cyan",
+        "magenta",
+        "blue",
+        "skyblue",
+      ];
+      return colors[Math.floor(Math.random() * colors.length)];
     }
 
-    function dragEnded(event, d) {
-      const closestNode = findClosestNode(event);
+    // 개별 노드 스타일 지정
+    node
+      .append("circle")
+      .attr("fill", (d) => (d.depth === 1 ? getRandomColor() : "gray"))
+      .attr("stroke-width", 1.5)
+      .attr("r", (d) => (d.depth === 1 ? 7 : 5));
 
-      if (closestNode && closestNode !== d && !isDescendant(d, closestNode)) {
-        // Remove the node and its children from its current parent
-        if (d.parent) {
-          d.parent.children = d.parent.children.filter((child) => child !== d);
-          if (d.parent.children.length === 0) {
-            delete d.parent.children;
-          }
-        }
+    // 노드 이름 라벨 지정
+    const labels = node
+      .append("text")
+      .attr("dx", 8)
+      .attr("dy", ".35em")
+      .text((d) => (d.depth === 0 ? "" : d.data.name))
+      .style("font-size", "10px")
+      .style("fill", "black")
+      .style("opacity", 0);
 
-        // Add the node and its children to the new parent
-        if (!closestNode.children) closestNode.children = [];
-        closestNode.children.push(d);
-        d.parent = closestNode;
-
-        // Update the tree
-        updateTree();
-      } else {
-        // If no valid new parent, revert the position
-        updateTree();
-      }
-
-      // Remove temp link
-      if (tempLink) tempLink.remove();
-
-      // Show all links again
-      d3.select(gRef.current).selectAll(".link").style("opacity", 1);
-
-      draggedNode = null;
-    }
-
-    function findClosestNode(event) {
-      const [x, y] = d3.pointer(event, gRef.current);
-      const nodes = root.descendants();
-      const threshold = 30; // Adjust this value to change the "close enough" distance
-
-      return nodes.find((node) => {
-        const dx = node.y - x;
-        const dy = node.x - y;
-        return Math.sqrt(dx * dx + dy * dy) < threshold && node !== draggedNode;
+    // 노드 이름 보이기/안보이기(호버링 시)
+    const updateLabelVisibility = () => {
+      labels.style("opacity", (d) => {
+        if (d.depth === 0) return 0; // Always hide root label
+        return scaleRef.current > 1.5 || d.isHovered ? 1 : 0;
       });
+    };
+
+    // 마우스 호버링 이벤트
+    node
+      .on("mouseover", function (event, d) {
+        if (d.depth === 0) return;
+        d.isHovered = true;
+        updateLabelVisibility();
+      })
+      .on("mouseout", function (event, d) {
+        if (d.depth === 0) return;
+        d.isHovered = false;
+        updateLabelVisibility();
+      });
+
+    // 시뮬레이션 업데이트
+    simulation.on("tick", () => {
+      link
+        .attr("x1", (d) => d.source.x)
+        .attr("y1", (d) => d.source.y)
+        .attr("x2", (d) => d.target.x)
+        .attr("y2", (d) => d.target.y);
+
+      node.attr("transform", (d) => `translate(${d.x},${d.y})`);
+    });
+
+    // 확대 함수
+    const zoom = d3
+      .zoom()
+      .scaleExtent([0.1, 10])
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+        scaleRef.current = event.transform.k;
+        updateLabelVisibility();
+        forceUpdate({}); // Force a re-render to update any components that depend on scale
+      });
+
+    svg.call(zoom);
+
+    // 마우스 휠로 확대/축소
+    svg.on("wheel", (event) => {
+      event.preventDefault();
+      const delta = event.deltaY;
+      const currentTransform = d3.zoomTransform(svg.node());
+      const newScale =
+        delta > 0 ? currentTransform.k * 0.95 : currentTransform.k * 1.05;
+      const newTransform = d3.zoomIdentity
+        .translate(currentTransform.x, currentTransform.y)
+        .scale(newScale);
+      svg.call(zoom.transform, newTransform);
+    });
+
+    // 드래그
+    function drag(simulation) {
+      function dragstarted(event, d) {
+        if (d.depth === 0) return; // 루트는 드래그 안되게 막기
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+
+      function dragged(event, d) {
+        if (d.depth === 0) return; // 루트는 드래그 안되게 막기
+        d.fx = event.x;
+        d.fy = event.y;
+      }
+
+      function dragended(event, d) {
+        if (d.depth === 0) return; // 루트는 드래그 안되게 막기
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+
+      return d3
+        .drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
     }
 
-    function isDescendant(parent, child) {
-      if (parent === child) return true;
-      if (!parent.children) return false;
-      return parent.children.some((d) => isDescendant(d, child));
-    }
+    // 노드 이름 라벨 초기화
+    updateLabelVisibility();
 
-    updateTree();
-  }, [root]);
+    // 시뮬레이션 중지
+    return () => {
+      simulation.stop();
+    };
+  }, [data, width, height]);
 
   return (
-    <svg ref={svgRef}>
-      <g ref={gRef}></g>
-    </svg>
+    <svg
+      ref={svgRef}
+      style={{ width: "100%", height: "100%", display: "block" }}
+    />
   );
 };
 

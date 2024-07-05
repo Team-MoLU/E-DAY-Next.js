@@ -4,14 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   addTask,
   deleteTask,
+  dropTask,
   getTaskByPath,
   updateTask,
 } from "@/redux/reducers/taskSlice";
-import { v4 as uuidv4 } from "uuid";
 
-export default function TaskPage() {
+export default function TrashPage() {
   // task data 관련
-  const data = useSelector((state) => state.tasks.root);
+  const data = useSelector((state) => state.tasks.trash);
   const dispatch = useDispatch();
   const [currentTask, setCurrentTask] = useState(data);
   const [path, setPath] = useState([]);
@@ -72,10 +72,10 @@ export default function TaskPage() {
   /**
    * 현재 task를 삭제(cascade)하고, 부모 task로 이동하는 함수
    */
-  const handleDeleteTask = () => {
+  const handleDropTask = () => {
     // dispatch 통해서 현재 node 삭제
     dispatch(
-      deleteTask({
+      dropTask({
         section: data.name,
         path: path,
       })
@@ -144,9 +144,9 @@ export default function TaskPage() {
           <button onClick={toggleSidebar}>
             {isSidebarOpen ? "상세 끄기" : "상세 보기"}
           </button>
-          {/* 삭제 버튼 */}
-          {currentTask.name !== "root" && (
-            <button onClick={handleDeleteTask}>삭제</button>
+          {/* 영구 삭제 버튼 */}
+          {currentTask.name !== "trash" && (
+            <button onClick={handleDropTask}>영구 삭제</button>
           )}
           <div>
             {/* 경로 */}
@@ -203,16 +203,6 @@ export default function TaskPage() {
                 </li>
               ))}
             </ul>
-            {/* 새로운 할 일 추가 UI */}
-            <form onSubmit={handleAddTask}>
-              <input
-                type="text"
-                value={newTaskName}
-                onChange={(e) => setNewTaskName(e.target.value)}
-                placeholder="새로운 할 일"
-              />
-              <button type="submit">추가</button>
-            </form>
           </div>
         </div>
         {isSidebarOpen && (

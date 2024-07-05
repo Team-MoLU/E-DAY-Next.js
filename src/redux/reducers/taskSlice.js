@@ -241,23 +241,58 @@ const addTaskAtPath = (state, path, newTask) => {
   current.children.push(newTask);
 };
 
+const deleteTaskAtPath = (state, path) => {
+  let current = state;
+  let parent = null;
+  let indexToDelete = null;
+  for (let i = 0; i < path.length; i++) {
+    if (current.children && current.children[path[i]]) {
+      parent = current;
+      indexToDelete = path[i];
+      current = current.children[path[i]];
+    } else {
+      return; // Path not found, do nothing
+    }
+  }
+  if (parent && indexToDelete !== null) {
+    parent.children.splice(indexToDelete, 1);
+  }
+};
+
 const taskSlice = createSlice({
   name: "tasks",
   initialState,
   reducers: {
+    // 새로운 task 추가
     addTask: (state, action) => {
       const { section, path, newTask } = action.payload;
       if (state[section]) {
         addTaskAtPath(state[section], path, newTask);
       }
     },
+    // tash 속성 update
     updateTask: (state, action) => {
       const { section, path, updatedTask } = action.payload;
       if (state[section]) {
         updateTaskAtPath(state[section], path, updatedTask);
       }
     },
-    // Todo: delete 실제 삭제가 아닌 trash로 이동
+    // task 삭제하여 trash 섹션으로 이동
+    deleteTask: (state, action) => {
+      const { section, path } = action.payload;
+      if (state[section]) {
+        const taskToDelete = getTaskByPath(state[section], path);
+        addTaskAtPath(state.trash, [], taskToDelete); // Add to trash
+        deleteTaskAtPath(state[section], path); // Delete from original location
+      }
+    },
+    // 영구적으로 task를 삭제
+    dropTask: (state, action) => {
+      const { section, path } = action.payload;
+      if (state[section]) {
+        deleteTaskAtPath(state[section], path);
+      }
+    },
     // Todo: moveTask
     // Todo: restoreTask : 휴지통에서 복구
     // Todo: dropTask : 영구 삭제
@@ -266,5 +301,5 @@ const taskSlice = createSlice({
   },
 });
 
-export const { addTask, updateTask } = taskSlice.actions;
+export const { addTask, updateTask, deleteTask, dropTask } = taskSlice.actions;
 export default taskSlice.reducer;

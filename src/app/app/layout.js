@@ -1,4 +1,7 @@
+"use client";
 import Link from "next/link";
+import { Provider } from "react-redux";
+import store from "../../redux/store";
 
 export default function AppLayout({ children }) {
   return (
@@ -12,8 +15,11 @@ export default function AppLayout({ children }) {
         <Link href="/app/achievement">달성도</Link>
         <Link href="/app/archive">아카이브</Link>
         <Link href="/app/task">task</Link>
+        <Link href="/app/trash">trash</Link>
       </div>
-      <div className="main-content">{children}</div>
+      <Provider store={store}>
+        <div className="main-content">{children}</div>
+      </Provider>
     </>
   );
 }

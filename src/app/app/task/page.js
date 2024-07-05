@@ -21,8 +21,35 @@ export default function TaskPage() {
     setCurrentTask(getTaskByPath(data, path));
   }, [data]);
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentTask({ ...currentTask, [name]: value });
+  };
+
+  const handleInputBlur = () => {
+    const updatedTask = {
+      ...currentTask,
+      name: currentTask.name,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
   /**
-   * task 추가 함수
+   * 현재 currentTask의 값을 update하는 함수
+   * @param {*} updatedTask
+   */
+  const updateCurrentTask = (updatedTask) => {
+    dispatch(
+      updateTask({
+        section: data.name,
+        path: path,
+        updatedTask: updatedTask,
+      })
+    );
+  };
+
+  /**
+   * 새로운 task를 추가하는 함수
    */
   const handleAddTask = (e) => {
     e.preventDefault(); // Prevent the default form submission
@@ -51,10 +78,21 @@ export default function TaskPage() {
   };
 
   /**
-   * 하위 task의 index를 바탕으로 해당 task의 체크 값 변경하는 함수
+   * currentTask의 check 값을 변경하는 함수
+   */
+  const toggleCurrentTaskCheck = () => {
+    const updatedTask = {
+      ...currentTask,
+      check: !currentTask.check,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
+  /**
+   * 하위 task의 index를 바탕으로 해당 하위 task의 check 값을 변경하는 함수
    * @param {int} subtaskIndex
    */
-  const handleCheckboxChange = (subtaskIndex) => {
+  const toggleSubTaskCheck = (subtaskIndex) => {
     const updatedTask = {
       ...currentTask.children[subtaskIndex],
       check: !currentTask.children[subtaskIndex].check,
@@ -179,7 +217,25 @@ export default function TaskPage() {
               ))}
             </div>
             {/* 현재 Task의 이름 */}
-            <h2>{currentTask.name}</h2>
+            {currentTask.name === "root" ? (
+              <h2>{currentTask.name}</h2>
+            ) : (
+              <>
+                <input
+                  type="checkbox"
+                  checked={currentTask.check}
+                  onChange={toggleCurrentTaskCheck}
+                />
+                <input
+                  type="text"
+                  name="name"
+                  value={currentTask.name}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
+                />
+              </>
+            )}
+
             {/* 하위 Task의 List */}
             <ul>
               {currentTask.children.map((task, index) => (
@@ -196,7 +252,7 @@ export default function TaskPage() {
                     checked={task.check}
                     onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
                     onChange={(e) => {
-                      handleCheckboxChange(index);
+                      toggleSubTaskCheck(index);
                     }}
                   />
                   <span>{task.name}</span>
@@ -225,34 +281,43 @@ export default function TaskPage() {
           style={{ width: `calc(100% - ${mainViewWidth}px)` }}
         >
           <h1>sub 페이지</h1>
-          <TaskDetail task={currentTask} onTaskChange={setCurrentTask} />
+          <TaskDetail task={currentTask} onTaskChanged={updateCurrentTask} />
         </div>
       )}
     </div>
   );
 }
 
-const TaskDetail = ({ task, onTaskChange }) => {
+const TaskDetail = ({ task, onTaskChanged }) => {
+  const [memo, setMemo] = useState(task.memo); // memo 상태 추가
+
+  useEffect(() => {
+    // task prop이 변경될 때 memo 값을 업데이트
+    setMemo(task.memo);
+  }, [task]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    onTaskChange({ ...task, [name]: value });
+    if (name === "memo") {
+      setMemo(value); // memo 필드의 입력 값을 memo 상태에 업데이트
+    }
   };
 
-  const handleSave = () => {
-    // 변경사항 업데이트
+  const handleInputBlur = () => {
+    const updatedTask = {
+      ...task,
+      memo: memo, // 변경된 memo 값을 포함한 updatedTask 객체 생성
+    };
+    onTaskChanged(updatedTask); // 부모 컴포넌트로 전달된 함수 호출하여 Redux store 업데이트
   };
 
-  return (
+  return task.name === "root" ? (
+    <h1>root는 상세가 없어요</h1>
+  ) : (
     <div className="task-detail">
       <h1>상세</h1>
       <div className="task-detail-item">
-        <strong>Name:</strong>
-        <input
-          type="text"
-          name="name"
-          value={task.name}
-          onChange={handleInputChange}
-        />
+        <strong>Name:</strong> <span>{task.name || "Not set"}</span>
       </div>
       <div className="task-detail-item">
         <strong>Start Date:</strong> <span>{task.startDate || "Not set"}</span>
@@ -265,9 +330,13 @@ const TaskDetail = ({ task, onTaskChange }) => {
       </div>
       <div className="task-detail-item">
         <strong>Memo:</strong>
-        <textarea name="memo" value={task.memo} onChange={handleInputChange} />
+        <textarea
+          name="memo"
+          value={memo}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
+        />
       </div>
-      <button onClick={handleSave}>Save</button>
     </div>
   );
 };

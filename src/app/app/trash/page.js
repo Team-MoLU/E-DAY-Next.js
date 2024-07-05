@@ -1,13 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  addTask,
-  deleteTask,
-  dropTask,
-  getTaskByPath,
-  updateTask,
-} from "@/redux/reducers/taskSlice";
+import { dropTask, getTaskByPath } from "@/redux/reducers/taskSlice";
 
 export default function TrashPage() {
   // task data 관련
@@ -15,59 +9,10 @@ export default function TrashPage() {
   const dispatch = useDispatch();
   const [currentTask, setCurrentTask] = useState(data);
   const [path, setPath] = useState([]);
-  const [newTaskName, setNewTaskName] = useState("");
 
   useEffect(() => {
     setCurrentTask(getTaskByPath(data, path));
   }, [data]);
-
-  /**
-   * task 추가 함수
-   */
-  const handleAddTask = (e) => {
-    e.preventDefault(); // Prevent the default form submission
-    if (newTaskName.trim()) {
-      const newTask = {
-        id: uuidv4(), // Generate UUID for id
-        name: newTaskName,
-        memo: "", // Initial memo is empty
-        startDate: "", // Initial startDate is empty
-        endDate: "", // Initial endDate is empty
-        priority: 0, // Initial priority is 0
-        check: false, // Initial check is false
-        children: [], // Initialize with empty children array
-      };
-
-      dispatch(
-        addTask({
-          section: data.name,
-          path: path, // root 하위에 바로 추가
-          newTask: newTask,
-        })
-      );
-
-      setNewTaskName(""); // Clear input after adding
-    }
-  };
-
-  /**
-   * 하위 task의 index를 바탕으로 해당 task의 체크 값 변경하는 함수
-   * @param {int} subtaskIndex
-   */
-  const handleCheckboxChange = (subtaskIndex) => {
-    const updatedTask = {
-      ...currentTask.children[subtaskIndex],
-      check: !currentTask.children[subtaskIndex].check,
-    };
-
-    dispatch(
-      updateTask({
-        section: data.name,
-        path: [...path, subtaskIndex],
-        updatedTask: updatedTask,
-      })
-    );
-  };
 
   /**
    * 현재 task를 삭제(cascade)하고, 부모 task로 이동하는 함수
@@ -179,7 +124,14 @@ export default function TrashPage() {
               ))}
             </div>
             {/* 현재 Task의 이름 */}
-            <h2>{currentTask.name}</h2>
+            {currentTask.name === "trash" ? (
+              <h2>{currentTask.name}</h2>
+            ) : (
+              <>
+                <input type="checkbox" checked={currentTask.check} />
+                <sapn>{currentTask.name}</sapn>
+              </>
+            )}
             {/* 하위 Task의 List */}
             <ul>
               {currentTask.children.map((task, index) => (
@@ -195,9 +147,6 @@ export default function TrashPage() {
                     type="checkbox"
                     checked={task.check}
                     onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
-                    onChange={(e) => {
-                      handleCheckboxChange(index);
-                    }}
                   />
                   <span>{task.name}</span>
                 </li>
@@ -215,34 +164,21 @@ export default function TrashPage() {
           style={{ width: `calc(100% - ${mainViewWidth}px)` }}
         >
           <h1>sub 페이지</h1>
-          <TaskDetail task={currentTask} onTaskChange={setCurrentTask} />
+          <TaskDetail task={currentTask} />
         </div>
       )}
     </div>
   );
 }
 
-const TaskDetail = ({ task, onTaskChange }) => {
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    onTaskChange({ ...task, [name]: value });
-  };
-
-  const handleSave = () => {
-    // 변경사항 업데이트
-  };
-
-  return (
+const TaskDetail = ({ task }) => {
+  return task.name === "trash" ? (
+    <h1>trash는 상세가 없어요</h1>
+  ) : (
     <div className="task-detail">
       <h1>상세</h1>
       <div className="task-detail-item">
-        <strong>Name:</strong>
-        <input
-          type="text"
-          name="name"
-          value={task.name}
-          onChange={handleInputChange}
-        />
+        <strong>Name:</strong> <span>{task.name || "Not set"}</span>
       </div>
       <div className="task-detail-item">
         <strong>Start Date:</strong> <span>{task.startDate || "Not set"}</span>
@@ -255,9 +191,8 @@ const TaskDetail = ({ task, onTaskChange }) => {
       </div>
       <div className="task-detail-item">
         <strong>Memo:</strong>
-        <textarea name="memo" value={task.memo} onChange={handleInputChange} />
+        <textarea name="memo" value={task.memo} />
       </div>
-      <button onClick={handleSave}>Save</button>
     </div>
   );
 };

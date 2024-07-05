@@ -290,10 +290,12 @@ export default function TaskPage() {
 
 const TaskDetail = ({ task, onTaskChanged }) => {
   const [memo, setMemo] = useState(task.memo); // memo 상태 추가
+  const [priority, setPriority] = useState(task.priority); // priority 상태 추가
 
   useEffect(() => {
-    // task prop이 변경될 때 memo 값을 업데이트
+    // task prop이 변경될 때 memo, priority 값을 업데이트
     setMemo(task.memo);
+    setPriority(task.priority);
   }, [task]);
 
   const handleInputChange = (e) => {
@@ -301,6 +303,17 @@ const TaskDetail = ({ task, onTaskChanged }) => {
     if (name === "memo") {
       setMemo(value); // memo 필드의 입력 값을 memo 상태에 업데이트
     }
+  };
+
+  const handlePriorityClick = () => {
+    const newPriority = (priority + 1) % 4; // 우선순위는 0, 1, 2, 3으로 순환
+    setPriority(newPriority);
+
+    const updatedTask = {
+      ...task,
+      priority: newPriority, // 변경된 priority 값을 포함한 updatedTask 객체 생성
+    };
+    onTaskChanged(updatedTask); // 부모 컴포넌트로 전달된 함수 호출하여 Redux store 업데이트
   };
 
   const handleInputBlur = () => {
@@ -326,7 +339,13 @@ const TaskDetail = ({ task, onTaskChanged }) => {
         <strong>End Date:</strong> <span>{task.endDate || "Not set"}</span>
       </div>
       <div className="task-detail-item">
-        <strong>Priority:</strong> <span>{task.priority || "Not set"}</span>
+        <strong>Priority:</strong>{" "}
+        <span
+          style={{ cursor: "pointer", textDecoration: "underline" }}
+          onClick={handlePriorityClick}
+        >
+          {priority}
+        </span>
       </div>
       <div className="task-detail-item">
         <strong>Memo:</strong>

@@ -8,6 +8,8 @@ import {
   updateTask,
 } from "@/redux/reducers/taskSlice";
 import { v4 as uuidv4 } from "uuid";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function TaskPage() {
   // task data 관련
@@ -291,11 +293,19 @@ export default function TaskPage() {
 const TaskDetail = ({ task, onTaskChanged }) => {
   const [memo, setMemo] = useState(task.memo); // memo 상태 추가
   const [priority, setPriority] = useState(task.priority); // priority 상태 추가
+  const [dateRange, setDateRange] = useState([
+    task.startDate ? new Date(task.startDate) : null,
+    task.endDate ? new Date(task.endDate) : null,
+  ]);
 
   useEffect(() => {
-    // task prop이 변경될 때 memo, priority 값을 업데이트
+    // task prop이 변경될 때 memo, priority, startDate, endDate 값을 업데이트
     setMemo(task.memo);
     setPriority(task.priority);
+    setDateRange([
+      task.startDate ? new Date(task.startDate) : null,
+      task.endDate ? new Date(task.endDate) : null,
+    ]);
   }, [task]);
 
   const handleInputChange = (e) => {
@@ -305,23 +315,45 @@ const TaskDetail = ({ task, onTaskChanged }) => {
     }
   };
 
+  // memo 값이 변경된 이후 이를 저장하는 함수
+  const handleInputBlur = () => {
+    const updatedTask = {
+      ...task,
+      memo: memo,
+    };
+    onTaskChanged(updatedTask);
+  };
+
+  // priority 를 클릭하면, 값을 변경하고 이를 update 하는 함수
   const handlePriorityClick = () => {
     const newPriority = (priority + 1) % 4; // 우선순위는 0, 1, 2, 3으로 순환
     setPriority(newPriority);
 
     const updatedTask = {
       ...task,
-      priority: newPriority, // 변경된 priority 값을 포함한 updatedTask 객체 생성
+      priority: newPriority,
     };
-    onTaskChanged(updatedTask); // 부모 컴포넌트로 전달된 함수 호출하여 Redux store 업데이트
+    onTaskChanged(updatedTask);
   };
 
-  const handleInputBlur = () => {
+  // date 선택 시, 값을 변경하고 update 하는 함수
+  const handleDateRangeChange = (update) => {
+    setDateRange(update);
+
     const updatedTask = {
       ...task,
-      memo: memo, // 변경된 memo 값을 포함한 updatedTask 객체 생성
+      startDate: update[0] ? formatDate(update[0]) : null,
+      endDate: update[1] ? formatDate(update[1]) : null,
     };
-    onTaskChanged(updatedTask); // 부모 컴포넌트로 전달된 함수 호출하여 Redux store 업데이트
+
+    onTaskChanged(updatedTask);
+  };
+
+  // 날짜를 YYYY-MM-DD 형식의 문자열로 변환하는 함수
+  const formatDate = (date) => {
+    const offset = date.getTimezoneOffset();
+    const adjustedDate = new Date(date.getTime() - offset * 60 * 1000);
+    return adjustedDate.toISOString().split("T")[0];
   };
 
   return task.name === "root" ? (
@@ -332,12 +364,20 @@ const TaskDetail = ({ task, onTaskChanged }) => {
       <div className="task-detail-item">
         <strong>Name:</strong> <span>{task.name || "Not set"}</span>
       </div>
+      {/* 날짜 */}
       <div className="task-detail-item">
-        <strong>Start Date:</strong> <span>{task.startDate || "Not set"}</span>
+        <strong>Date Range:</strong>{" "}
+        <DatePicker
+          selectsRange={true}
+          startDate={dateRange[0]}
+          endDate={dateRange[1]}
+          onChange={handleDateRangeChange}
+          dateFormat="yyyy-MM-dd"
+          isClearable
+          timeZone="UTC"
+        />
       </div>
-      <div className="task-detail-item">
-        <strong>End Date:</strong> <span>{task.endDate || "Not set"}</span>
-      </div>
+      {/* 우선순위 */}
       <div className="task-detail-item">
         <strong>Priority:</strong>{" "}
         <span
@@ -347,6 +387,7 @@ const TaskDetail = ({ task, onTaskChanged }) => {
           {priority}
         </span>
       </div>
+      {/* 메모 */}
       <div className="task-detail-item">
         <strong>Memo:</strong>
         <textarea

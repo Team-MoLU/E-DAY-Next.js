@@ -7,29 +7,28 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
   const data = useSelector((state) => state.tasks.root);
   const dispatch = useDispatch();
   const svgRef = useRef(null);
-  const scaleRef = useRef(1);
+  const scaleRef = useRef(d3.zoomIdentity);
   const simulationRef = useRef(null);
 
-  const memoizedData = useMemo(() => data, [data]);
+  const memoizedData = useMemo(() => {
+    // root의 children을 최상위 그룹으로 사용
+    return data.children || [];
+  }, [data]);
 
   const drag = useCallback(() => {
     function dragstarted(event, d) {
-      if (d.depth < 1) return;
       if (!event.active) simulationRef.current.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
 
     function dragged(event, d) {
-      if (d.depth < 1) return;
       d.fx = event.x;
       d.fy = event.y;
     }
 
     function dragended(event, d) {
-      if (d.depth < 1) return;
       if (!event.active) simulationRef.current.alphaTarget(0);
-
       d.fx = null;
       d.fy = null;
     }
@@ -42,7 +41,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
   }, []);
 
   const renderTree = useCallback(() => {
-    if (!memoizedData) return;
+    if (!memoizedData.length) return;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
@@ -58,8 +57,8 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .zoom()
       .scaleExtent([0.1, 4])
       .on("zoom", (event) => {
-        const duration = 250; // 애니메이션 지속 시간
-        const ease = d3.easeCubicOut; // 애니메이션 easing 함수
+        const duration = 250;
+        const ease = d3.easeCubicOut;
 
         scaleRef.current = event.transform;
 
@@ -68,23 +67,40 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
           .ease(ease)
           .attr("transform", scaleRef.current);
 
-        // 줌 레벨에 따른 라벨 opacity 업데이트
-        labels
-          .transition()
-          .duration(duration)
-          .ease(ease)
-          .style("opacity", (d) => {
-            if (d.depth === 0) return 0;
-            return event.transform.k > 1.5 || d.isHovered ? 1 : 0;
-          });
+        updateLabelVisibility();
       });
 
     svg.call(zoom);
     svg.on("dblclick.zoom", null);
 
-    const root = d3.hierarchy(memoizedData);
-    const links = root.links();
-    const nodes = root.descendants();
+    // 각 그룹(원래 root의 children)을 독립적인 트리로 취급
+    const roots = memoizedData.map((d) => d3.hierarchy(d));
+
+    const links = roots.flatMap((root) => root.links());
+    const nodes = roots.flatMap((root) => root.descendants());
+
+    const radius = Math.min(width, height) / 2 - 100;
+    const radialScale = d3
+      .scaleLinear()
+      .domain([0, d3.max(nodes, (d) => d.depth)])
+      .range([0, radius]);
+
+    // 초기 노드 위치 설정
+    const groupAngle = (2 * Math.PI) / roots.length;
+    roots.forEach((root, i) => {
+      const centerX = radius * Math.cos(i * groupAngle);
+      const centerY = radius * Math.sin(i * groupAngle);
+      root.x = centerX;
+      root.y = centerY;
+      root.descendants().forEach((node, j) => {
+        if (node !== root) {
+          const angle = (j / (root.children?.length || 1)) * 2 * Math.PI;
+          const nodeRadius = radialScale(node.depth - root.depth);
+          node.x = centerX + nodeRadius * Math.cos(angle);
+          node.y = centerY + nodeRadius * Math.sin(angle);
+        }
+      });
+    });
 
     if (!simulationRef.current) {
       simulationRef.current = d3
@@ -94,18 +110,23 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
           d3
             .forceLink(links)
             .id((d) => d.id)
-            .distance((d) => (d.source.depth === 0 ? 10 : 50))
+            .distance(50)
             .strength(1)
         )
         .force("charge", d3.forceManyBody().strength(-500))
-        .force("x", d3.forceX())
-        .force("y", d3.forceY())
-        .force("center", d3.forceCenter());
+        .force(
+          "radial",
+          d3.forceRadial((d) => radialScale(d.depth)).strength(0.8)
+        )
+        .force("center", d3.forceCenter(0, 0))
+        .force("collision", d3.forceCollide().radius(30));
     } else {
       simulationRef.current.nodes(nodes);
       simulationRef.current.force("link").links(links);
-      simulationRef.current.alpha(1).restart();
+      simulationRef.current.force("radial").radius((d) => radialScale(d.depth));
     }
+
+    simulationRef.current.alpha(0.1).restart();
 
     const link = g
       .append("g")
@@ -113,8 +134,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .attr("stroke-opacity", 0.6)
       .selectAll("line")
       .data(links)
-      .join("line")
-      .style("opacity", (d) => (d.source.depth === 0 ? 0 : 1));
+      .join("line");
 
     function getRandomColor() {
       const colors = [
@@ -139,24 +159,21 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .join("g")
       .call(drag())
       .on("click", (event, d) => {
-        if (d.depth > 0) {
-          event.stopPropagation();
-          onNodeClick(d.data);
-        }
-      })
-      .style("opacity", (d) => (d.depth === 0 ? 0 : 1));
+        event.stopPropagation();
+        onNodeClick(d.data);
+      });
 
     node
       .append("circle")
-      .attr("fill", (d) => (d.depth === 1 ? getRandomColor() : "gray"))
+      .attr("fill", (d) => (d.depth === 0 ? getRandomColor() : "gray"))
       .attr("stroke-width", 1.5)
-      .attr("r", (d) => (d.depth === 1 ? 7 : 5));
+      .attr("r", (d) => (d.depth === 0 ? 7 : 5));
 
     const labels = node
       .append("text")
       .attr("dy", 20)
       .attr("text-anchor", "middle")
-      .text((d) => (d.depth === 0 ? "" : d.data.name))
+      .text((d) => d.data.name)
       .style("font-size", "10px")
       .style("fill", "black")
       .style("opacity", 0);
@@ -168,7 +185,6 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
         .duration(250)
         .ease(d3.easeCubicOut)
         .style("opacity", (d) => {
-          if (d.depth === 0) return 0;
           return scaleRef.current.k > 1.5 || d.isHovered ? 1 : 0;
         });
     };
@@ -177,66 +193,51 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     const highlightConnectedNodes = (d, opacity) => {
       const t = d3.transition().duration(250).ease(d3.easeCubicOut);
 
-      // 모든 노드와 엣지를 반투명하게 (root 노드 제외)
-      node.transition(t).style("opacity", (n) => (n.depth === 0 ? 0 : opacity));
-      link
-        .transition(t)
-        .style("opacity", (l) => (l.source.depth === 0 ? 0 : opacity));
-      labels.transition(t).style("opacity", 0); // 라벨을 완전히 투명하게
+      node.transition(t).style("opacity", opacity);
+      link.transition(t).style("opacity", opacity);
+      labels.transition(t).style("opacity", 0);
 
-      // 호버된 노드와 그 자식 노드들의 배열
       const connectedNodes = [d, ...d.descendants()];
 
-      // 연결된 노드와 엣지 강조
       node
-        .filter((n) => connectedNodes.includes(n) && n.depth !== 0)
+        .filter((n) => connectedNodes.includes(n))
         .transition(t)
         .style("opacity", 1);
+
       link
         .filter(
           (l) =>
             connectedNodes.includes(l.source) &&
-            connectedNodes.includes(l.target) &&
-            l.source.depth !== 0
+            connectedNodes.includes(l.target)
         )
         .transition(t)
         .style("opacity", 1);
 
-      // 호버된 노드와 직접 연결된 노드의 라벨만 표시
       labels
-        .filter((n) => (n === d || n.parent === d) && n.depth !== 0)
+        .filter((n) => n === d || n.parent === d)
         .transition(t)
         .style("opacity", 1);
     };
 
-    // 마우스 호버링 이벤트
     node
       .on("mouseover", function (event, d) {
-        if (d.depth === 0) return;
         d3.select(this)
           .select("circle")
           .transition()
           .duration(200)
-          .attr("r", (d) => (d.depth === 1 ? 9 : 7));
+          .attr("r", (d) => (d.depth === 0 ? 9 : 7));
         highlightConnectedNodes(d, 0.2);
       })
       .on("mouseout", function (event, d) {
-        if (d.depth === 0) return;
         d3.select(this)
           .select("circle")
           .transition()
           .duration(200)
-          .attr("r", (d) => (d.depth === 1 ? 7 : 5));
+          .attr("r", (d) => (d.depth === 0 ? 7 : 5));
 
-        // 트랜지션 설정
         const t = d3.transition().duration(250).ease(d3.easeCubicOut);
-
-        // root를 제외한 모든 노드와 엣지의 opacity를 1로 복원
-        node.transition(t).style("opacity", (n) => (n.depth === 0 ? 0 : 1));
-        link
-          .transition(t)
-          .style("opacity", (l) => (l.source.depth === 0 ? 0 : 1));
-
+        node.transition(t).style("opacity", 1);
+        link.transition(t).style("opacity", 1);
         updateLabelVisibility();
       });
 
@@ -250,11 +251,10 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       node.attr("transform", (d) => `translate(${d.x},${d.y})`);
     });
 
-    // 노드 이름 라벨 초기화
     updateLabelVisibility();
 
     return () => {
-      simulation.stop();
+      simulationRef.current.stop();
     };
   }, [memoizedData, width, height, onNodeClick, drag]);
 

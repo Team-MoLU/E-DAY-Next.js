@@ -293,13 +293,21 @@ const taskSlice = createSlice({
         deleteTaskAtPath(state[section], path);
       }
     },
+    // trash에서 task를 복구
+    restoreTask: (state, action) => {
+      const { path } = action.payload;
+      const taskToRestore = getTaskByPath(state.trash, path);
+      if (taskToRestore) {
+        addTaskAtPath(state.root, [], taskToRestore); // Add to root
+        deleteTaskAtPath(state.trash, path); // Remove from trash
+      }
+    },
     // Todo: moveTask
-    // Todo: restoreTask : 휴지통에서 복구
-    // Todo: dropTask : 영구 삭제
     // Todo: archiveTask
     // Todo: unarchiveTask
   },
 });
 
-export const { addTask, updateTask, deleteTask, dropTask } = taskSlice.actions;
+export const { addTask, updateTask, deleteTask, dropTask, restoreTask } =
+  taskSlice.actions;
 export default taskSlice.reducer;

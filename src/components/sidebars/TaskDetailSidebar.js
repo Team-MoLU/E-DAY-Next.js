@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { updateTask, setSelectedTask } from "@/redux/reducers/taskSlice";
+import DatePicker from "react-datepicker"; // Make sure to import this
 
 const TaskDetailSidebar = () => {
   const dispatch = useDispatch();
   const selectedTask = useSelector((state) => state.tasks.selectedTask);
-  const isSidebarOpen = useSelector((state) => state.ui.sidebar.isOpen);
 
   const handleInputChange = useCallback(
     (e) => {
@@ -22,12 +22,40 @@ const TaskDetailSidebar = () => {
       dispatch(
         updateTask({
           section: "root",
-          path: [], // TODO: Implement correct path logic
+          path: [],
           updatedTask: selectedTask,
         })
       );
     }
   }, [dispatch, selectedTask]);
+
+  const handlePriorityClick = useCallback(() => {
+    if (selectedTask) {
+      const newPriority = (selectedTask.priority + 1) % 4;
+      dispatch(setSelectedTask({ ...selectedTask, priority: newPriority }));
+    }
+  }, [dispatch, selectedTask]);
+
+  const handleDateRangeChange = useCallback(
+    (update) => {
+      if (selectedTask) {
+        dispatch(
+          setSelectedTask({
+            ...selectedTask,
+            startDate: update[0] ? formatDate(update[0]) : null,
+            endDate: update[1] ? formatDate(update[1]) : null,
+          })
+        );
+      }
+    },
+    [dispatch, selectedTask]
+  );
+
+  const formatDate = (date) => {
+    const offset = date.getTimezoneOffset();
+    const adjustedDate = new Date(date.getTime() - offset * 60 * 1000);
+    return adjustedDate.toISOString().split("T")[0];
+  };
 
   const content = useMemo(() => {
     if (!selectedTask) {
@@ -47,6 +75,31 @@ const TaskDetailSidebar = () => {
           />
         </div>
         <div>
+          <label>Date Range:</label>
+          <DatePicker
+            selectsRange={true}
+            startDate={
+              selectedTask.startDate ? new Date(selectedTask.startDate) : null
+            }
+            endDate={
+              selectedTask.endDate ? new Date(selectedTask.endDate) : null
+            }
+            onChange={handleDateRangeChange}
+            dateFormat="yyyy-MM-dd"
+            isClearable
+            timeZone="UTC"
+          />
+        </div>
+        <div>
+          <label>Priority:</label>
+          <span
+            style={{ cursor: "pointer", textDecoration: "underline" }}
+            onClick={handlePriorityClick}
+          >
+            {selectedTask.priority}
+          </span>
+        </div>
+        <div>
           <label>Memo:</label>
           <textarea
             name="memo"
@@ -57,9 +110,13 @@ const TaskDetailSidebar = () => {
         <button onClick={handleSave}>Save</button>
       </>
     );
-  }, [selectedTask, handleInputChange, handleSave]);
-
-  if (!isSidebarOpen) return null;
+  }, [
+    selectedTask,
+    handleInputChange,
+    handleSave,
+    handlePriorityClick,
+    handleDateRangeChange,
+  ]);
 
   return <div className="task-detail">{content}</div>;
 };

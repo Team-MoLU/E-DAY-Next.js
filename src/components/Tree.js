@@ -285,6 +285,25 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       return colors[Math.floor(Math.random() * colors.length)];
     };
 
+    // 노드의 경로를 구하는 함수
+    const findNodePathById = (nodeId, tree = data, path = []) => {
+      if (tree.id === nodeId) {
+        return path;
+      }
+      if (tree.children) {
+        for (let i = 0; i < tree.children.length; i++) {
+          const result = findNodePathById(nodeId, tree.children[i], [
+            ...path,
+            i,
+          ]);
+          if (result) {
+            return result;
+          }
+        }
+      }
+      return null;
+    };
+
     // 노드 렌더링
     const node = g
       .append("g")
@@ -295,7 +314,8 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .on("click", (event, d) => {
         event.stopPropagation();
         closeContextMenu();
-        onNodeClick(d.data);
+        const path = findNodePathById(d.data.id);
+        onNodeClick(d.data, path);
       })
       .on("contextmenu", handleNodeContextMenu);
 
@@ -394,6 +414,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       simulationRef.current.stop();
     };
   }, [
+    data,
     memoizedData,
     width,
     height,

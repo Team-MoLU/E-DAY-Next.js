@@ -38,8 +38,8 @@ export default function TreeViewPage() {
   }, []);
 
   const onNodeClick = useCallback(
-    (node) => {
-      dispatch(handleNodeClickWithSidebar(node));
+    (node, path) => {
+      dispatch(handleNodeClickWithSidebar(node, path));
     },
     [dispatch]
   );

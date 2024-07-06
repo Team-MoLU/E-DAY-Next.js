@@ -7,21 +7,24 @@ import {
 } from "@/redux/reducers/uiSlice";
 import common from "@/lib/common/common_fn";
 
-export const handleNodeClickWithSidebar = (node) => (dispatch, getState) => {
-  const { tasks, ui } = getState();
-  const isSameNode = common.isEmpty(node)
-    ? true
-    : tasks.selectedTask && tasks.selectedTask.id === node.id;
-  const shouldOpenSidebar = !ui.sidebar.isOpen || isSameNode;
+export const handleNodeClickWithSidebar =
+  (node, path) => (dispatch, getState) => {
+    const { tasks, ui } = getState();
+    const isSameNode = common.isEmpty(node)
+      ? true
+      : tasks.selectedTask && tasks.selectedTask.id === node.id;
+    const shouldOpenSidebar = !ui.sidebar.isOpen || isSameNode;
 
-  dispatch(setSelectedTask(node));
+    const nodeWithPath = { ...node, path };
 
-  if (shouldOpenSidebar) {
-    dispatch(toggleSidebar());
-  }
+    dispatch(setSelectedTask(nodeWithPath));
 
-  dispatch(setSidebarContent("taskDetail"));
-};
+    if (shouldOpenSidebar) {
+      dispatch(toggleSidebar());
+    }
+
+    dispatch(setSidebarContent("taskDetail"));
+  };
 
 export const startResizing = () => (dispatch) => {
   dispatch(setIsResizing(true));

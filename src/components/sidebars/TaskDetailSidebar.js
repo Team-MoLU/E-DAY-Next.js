@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { updateTask, setSelectedTask } from "@/redux/reducers/taskSlice";
-import DatePicker from "react-datepicker"; // Make sure to import this
+import DatePicker from "react-datepicker";
 
 const TaskDetailSidebar = () => {
   const dispatch = useDispatch();
@@ -11,39 +11,49 @@ const TaskDetailSidebar = () => {
     (e) => {
       const { name, value } = e.target;
       if (selectedTask) {
-        dispatch(setSelectedTask({ ...selectedTask, [name]: value }));
+        const updatedTask = { ...selectedTask, [name]: value };
+        dispatch(setSelectedTask(updatedTask));
+        dispatch(
+          updateTask({
+            section: "root",
+            path: selectedTask.path,
+            updatedTask: updatedTask,
+          })
+        );
       }
     },
     [dispatch, selectedTask]
   );
 
-  const handleSave = useCallback(() => {
-    if (selectedTask) {
-      dispatch(
-        updateTask({
-          section: "root",
-          path: [],
-          updatedTask: selectedTask,
-        })
-      );
-    }
-  }, [dispatch, selectedTask]);
-
   const handlePriorityClick = useCallback(() => {
     if (selectedTask) {
       const newPriority = (selectedTask.priority + 1) % 4;
-      dispatch(setSelectedTask({ ...selectedTask, priority: newPriority }));
+      const updatedTask = { ...selectedTask, priority: newPriority };
+      dispatch(setSelectedTask(updatedTask));
+      dispatch(
+        updateTask({
+          section: "root",
+          path: selectedTask.path,
+          updatedTask: updatedTask,
+        })
+      );
     }
   }, [dispatch, selectedTask]);
 
   const handleDateRangeChange = useCallback(
     (update) => {
       if (selectedTask) {
+        const updatedTask = {
+          ...selectedTask,
+          startDate: update[0] ? formatDate(update[0]) : null,
+          endDate: update[1] ? formatDate(update[1]) : null,
+        };
+        dispatch(setSelectedTask(updatedTask));
         dispatch(
-          setSelectedTask({
-            ...selectedTask,
-            startDate: update[0] ? formatDate(update[0]) : null,
-            endDate: update[1] ? formatDate(update[1]) : null,
+          updateTask({
+            section: "root",
+            path: selectedTask.path,
+            updatedTask: updatedTask,
           })
         );
       }
@@ -64,7 +74,6 @@ const TaskDetailSidebar = () => {
 
     return (
       <>
-        <h2>Task Details</h2>
         <div>
           <label>Name:</label>
           <input
@@ -72,6 +81,7 @@ const TaskDetailSidebar = () => {
             name="name"
             value={selectedTask.name}
             onChange={handleInputChange}
+            onBlur={handleInputChange}
           />
         </div>
         <div>
@@ -105,15 +115,14 @@ const TaskDetailSidebar = () => {
             name="memo"
             value={selectedTask.memo || ""}
             onChange={handleInputChange}
+            onBlur={handleInputChange}
           />
         </div>
-        <button onClick={handleSave}>Save</button>
       </>
     );
   }, [
     selectedTask,
     handleInputChange,
-    handleSave,
     handlePriorityClick,
     handleDateRangeChange,
   ]);

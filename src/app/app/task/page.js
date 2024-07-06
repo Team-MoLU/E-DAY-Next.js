@@ -10,6 +10,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Explore } from "../../../components/Explore";
 
 export default function TaskPage() {
   // task data 관련
@@ -131,6 +132,7 @@ export default function TaskPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [mainViewWidth, setMainViewWidth] = useState(650);
+  const [activeView, setActiveView] = useState("TaskDetail"); // State to manage active view
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -181,8 +183,34 @@ export default function TaskPage() {
       >
         <div className="main-view-content">
           {/* 상세 버튼 */}
-          <button onClick={toggleSidebar}>
-            {isSidebarOpen ? "상세 끄기" : "상세 보기"}
+          <button
+            onClick={() => {
+              if (isSidebarOpen === false) {
+                setActiveView("TaskDetail");
+                toggleSidebar();
+              } else if (activeView === "TaskDetail") {
+                toggleSidebar();
+              } else {
+                setActiveView("TaskDetail");
+              }
+            }}
+          >
+            상세
+          </button>
+          {/* 탐색 버튼 */}
+          <button
+            onClick={() => {
+              if (isSidebarOpen === false) {
+                setActiveView("Explore");
+                toggleSidebar();
+              } else if (activeView === "Explore") {
+                toggleSidebar();
+              } else {
+                setActiveView("Explore");
+              }
+            }}
+          >
+            탐색
           </button>
           {/* 삭제 버튼 */}
           {currentTask.name !== "root" && (
@@ -282,8 +310,10 @@ export default function TaskPage() {
           className="sub-view"
           style={{ width: `calc(100% - ${mainViewWidth}px)` }}
         >
-          <h1>sub 페이지</h1>
-          <TaskDetail task={currentTask} onTaskChanged={updateCurrentTask} />
+          {activeView === "TaskDetail" && (
+            <TaskDetail task={currentTask} onTaskChanged={updateCurrentTask} />
+          )}
+          {activeView === "Explore" && <Explore />}
         </div>
       )}
     </div>

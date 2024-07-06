@@ -152,8 +152,8 @@ export default function TrashPage() {
               <h2>{currentTask.name}</h2>
             ) : (
               <>
-                <input type="checkbox" checked={currentTask.check} />
-                <sapn>{currentTask.name}</sapn>
+                <input type="checkbox" checked={currentTask.check} readOnly />
+                <span>{currentTask.name}</span>
               </>
             )}
             {/* 하위 Task의 List */}
@@ -171,6 +171,7 @@ export default function TrashPage() {
                     type="checkbox"
                     checked={task.check}
                     onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
+                    readOnly
                   />
                   <span>{task.name}</span>
                 </li>

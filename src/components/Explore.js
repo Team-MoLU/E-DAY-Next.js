@@ -1,12 +1,9 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  addTask,
-  deleteTask,
-  getTaskByPath,
-  updateTask,
-} from "@/redux/reducers/taskSlice";
+import { getTaskByPath } from "@/redux/reducers/taskSlice";
+import { useDrop } from "react-dnd";
+import { moveTask } from "@/redux/reducers/taskSlice";
 
 export const Explore = () => {
   // task data 관련
@@ -31,8 +28,46 @@ export const Explore = () => {
     }
   }, [data]);
 
+  const handleDrop = useCallback(
+    (item) => {
+      if (item.section === data.name) {
+        // 경로가 동일한 경우
+        if (JSON.stringify(item.path) === JSON.stringify(path)) {
+          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+          return;
+        }
+        // item.path가 path의 상위 경로인 경우 (path가 item.path의 하위 경로인 경우)
+        if (
+          path.length > item.path.length &&
+          JSON.stringify(item.path) ===
+            JSON.stringify(path.slice(0, item.path.length))
+        ) {
+          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+          return;
+        }
+      }
+      dispatch(
+        moveTask({
+          fromSection: item.section,
+          fromPath: item.path,
+          toSection: data.name,
+          toPath: path,
+        })
+      );
+    },
+    [path, data.name]
+  ); // path와 data.name을 의존성 배열에 추가
+
+  const [, drop] = useDrop(
+    () => ({
+      accept: "TASK",
+      drop: handleDrop,
+    }),
+    [handleDrop]
+  ); // handleDrop을 의존성 배열에 추가
+
   return (
-    <div className="explore">
+    <div className="explore" ref={drop}>
       <h1>탐색</h1>
       <div>
         {/* 경로 */}

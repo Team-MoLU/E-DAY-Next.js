@@ -11,6 +11,9 @@ import { v4 as uuidv4 } from "uuid";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Explore } from "../../../components/Explore";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { DraggableTask } from "../../../components/DraggableTask";
 
 export default function TaskPage() {
   // task data 관련
@@ -173,150 +176,153 @@ export default function TaskPage() {
 
   // view return
   return (
-    <div className="task-page">
-      <div
-        ref={sidebarRef}
-        className="main-view"
-        style={{
-          width: isSidebarOpen ? mainViewWidth : "100%",
-        }}
-      >
-        <div className="main-view-content">
-          {/* 상세 버튼 */}
-          <button
-            onClick={() => {
-              if (isSidebarOpen === false) {
-                setActiveView("TaskDetail");
-                toggleSidebar();
-              } else if (activeView === "TaskDetail") {
-                toggleSidebar();
-              } else {
-                setActiveView("TaskDetail");
-              }
-            }}
-          >
-            상세
-          </button>
-          {/* 탐색 버튼 */}
-          <button
-            onClick={() => {
-              if (isSidebarOpen === false) {
-                setActiveView("Explore");
-                toggleSidebar();
-              } else if (activeView === "Explore") {
-                toggleSidebar();
-              } else {
-                setActiveView("Explore");
-              }
-            }}
-          >
-            탐색
-          </button>
-          {/* 삭제 버튼 */}
-          {currentTask.name !== "root" && (
-            <button onClick={handleDeleteTask}>삭제</button>
-          )}
-          <div>
-            {/* 경로 */}
-            <div>
-              <span>경로: </span>
-              <span
-                style={{ cursor: "pointer", color: "blue" }}
-                onClick={() => {
-                  setCurrentTask(data);
-                  setPath([]);
-                }}
-              >
-                {data.name}
-              </span>
-              {path.map((p, index) => (
-                <span key={"p" + index}>
-                  {" / "}
-                  <span
-                    style={{ cursor: "pointer", color: "blue" }}
-                    onClick={() => {
-                      setCurrentTask(
-                        getTaskByPath(data, path.slice(0, index + 1))
-                      );
-                      setPath(path.slice(0, index + 1));
-                    }}
-                  >
-                    {getTaskByPath(data, path.slice(0, index + 1)).name}
-                  </span>
-                </span>
-              ))}
-            </div>
-            {/* 현재 Task의 이름 */}
-            {currentTask.name === "root" ? (
-              <h2>{currentTask.name}</h2>
-            ) : (
-              <>
-                <input
-                  type="checkbox"
-                  checked={currentTask.check}
-                  onChange={toggleCurrentTaskCheck}
-                />
-                <input
-                  type="text"
-                  name="name"
-                  value={currentTask.name}
-                  onChange={handleInputChange}
-                  onBlur={handleInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
-                />
-              </>
+    <DndProvider backend={HTML5Backend}>
+      <div className="task-page">
+        <div
+          ref={sidebarRef}
+          className="main-view"
+          style={{
+            width: isSidebarOpen ? mainViewWidth : "100%",
+          }}
+        >
+          <div className="main-view-content">
+            {/* 상세 버튼 */}
+            <button
+              onClick={() => {
+                if (isSidebarOpen === false) {
+                  setActiveView("TaskDetail");
+                  toggleSidebar();
+                } else if (activeView === "TaskDetail") {
+                  toggleSidebar();
+                } else {
+                  setActiveView("TaskDetail");
+                }
+              }}
+            >
+              상세
+            </button>
+            {/* 탐색 버튼 */}
+            <button
+              onClick={() => {
+                if (isSidebarOpen === false) {
+                  setActiveView("Explore");
+                  toggleSidebar();
+                } else if (activeView === "Explore") {
+                  toggleSidebar();
+                } else {
+                  setActiveView("Explore");
+                }
+              }}
+            >
+              탐색
+            </button>
+            {/* 삭제 버튼 */}
+            {currentTask.name !== "root" && (
+              <button onClick={handleDeleteTask}>삭제</button>
             )}
-
-            {/* 하위 Task의 List */}
-            <ul>
-              {currentTask.children.map((task, index) => (
-                <li
-                  key={index}
-                  className="task-item"
+            <div>
+              {/* 경로 */}
+              <div>
+                <span>경로: </span>
+                <span
+                  style={{ cursor: "pointer", color: "blue" }}
                   onClick={() => {
-                    setCurrentTask(currentTask.children[index]);
-                    setPath([...path, index]);
+                    setCurrentTask(data);
+                    setPath([]);
                   }}
                 >
+                  {data.name}
+                </span>
+                {path.map((p, index) => (
+                  <span key={"p" + index}>
+                    {" / "}
+                    <span
+                      style={{ cursor: "pointer", color: "blue" }}
+                      onClick={() => {
+                        setCurrentTask(
+                          getTaskByPath(data, path.slice(0, index + 1))
+                        );
+                        setPath(path.slice(0, index + 1));
+                      }}
+                    >
+                      {getTaskByPath(data, path.slice(0, index + 1)).name}
+                    </span>
+                  </span>
+                ))}
+              </div>
+              {/* 현재 Task의 이름 */}
+              {currentTask.name === "root" ? (
+                <h2>{currentTask.name}</h2>
+              ) : (
+                <>
                   <input
                     type="checkbox"
-                    checked={task.check}
-                    onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
-                    onChange={(e) => {
+                    checked={currentTask.check}
+                    onChange={toggleCurrentTaskCheck}
+                  />
+                  <input
+                    type="text"
+                    name="name"
+                    value={currentTask.name}
+                    onChange={handleInputChange}
+                    onBlur={handleInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
+                  />
+                </>
+              )}
+
+              {/* 하위 Task의 List */}
+              <ul>
+                {currentTask.children.map((task, index) => (
+                  <DraggableTask
+                    key={index}
+                    task={task}
+                    section={data.name}
+                    path={[...path, index]}
+                    onClick={() => {
+                      setCurrentTask(currentTask.children[index]);
+                      setPath([...path, index]);
+                    }}
+                    onCheckChange={(e) => {
                       toggleSubTaskCheck(index);
                     }}
                   />
-                  <span>{task.name}</span>
-                </li>
-              ))}
-            </ul>
-            {/* 새로운 할 일 추가 UI */}
-            <form onSubmit={handleAddTask}>
-              <input
-                type="text"
-                value={newTaskName}
-                onChange={(e) => setNewTaskName(e.target.value)}
-                placeholder="새로운 할 일"
-              />
-              <button type="submit">추가</button>
-            </form>
+                ))}
+              </ul>
+              {/* 새로운 할 일 추가 UI */}
+              <form onSubmit={handleAddTask}>
+                <input
+                  type="text"
+                  value={newTaskName}
+                  onChange={(e) => setNewTaskName(e.target.value)}
+                  placeholder="새로운 할 일"
+                />
+                <button type="submit">추가</button>
+              </form>
+            </div>
           </div>
+          {isSidebarOpen && (
+            <div
+              className="main-sub-view-resizer"
+              onMouseDown={startResizing}
+            />
+          )}
         </div>
         {isSidebarOpen && (
-          <div className="main-sub-view-resizer" onMouseDown={startResizing} />
+          <div
+            className="sub-view"
+            style={{ width: `calc(100% - ${mainViewWidth}px)` }}
+          >
+            {activeView === "TaskDetail" && (
+              <TaskDetail
+                task={currentTask}
+                onTaskChanged={updateCurrentTask}
+              />
+            )}
+            {activeView === "Explore" && <Explore />}
+          </div>
         )}
       </div>
-      {isSidebarOpen && (
-        <div
-          className="sub-view"
-          style={{ width: `calc(100% - ${mainViewWidth}px)` }}
-        >
-          {activeView === "TaskDetail" && (
-            <TaskDetail task={currentTask} onTaskChanged={updateCurrentTask} />
-          )}
-          {activeView === "Explore" && <Explore />}
-        </div>
-      )}
-    </div>
+    </DndProvider>
   );
 }
 

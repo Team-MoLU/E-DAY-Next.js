@@ -261,8 +261,15 @@ const deleteTaskAtPath = (state, path) => {
 
 const taskSlice = createSlice({
   name: "tasks",
-  initialState,
+  initialState: {
+    ...initialState,
+    selectedTask: null,
+  },
   reducers: {
+    // (Tree에서) task 선택 시 선택된 task 저장
+    setSelectedTask: (state, action) => {
+      state.selectedTask = action.payload;
+    },
     // 새로운 task 추가
     addTask: (state, action) => {
       const { section, path, newTask } = action.payload;
@@ -295,11 +302,17 @@ const taskSlice = createSlice({
     },
     // Todo: moveTask
     // Todo: restoreTask : 휴지통에서 복구
-    // Todo: dropTask : 영구 삭제
     // Todo: archiveTask
     // Todo: unarchiveTask
   },
 });
 
-export const { addTask, updateTask, deleteTask, dropTask } = taskSlice.actions;
+export const {
+  setSelectedTask,
+  handleNodeClick,
+  addTask,
+  updateTask,
+  deleteTask,
+  dropTask,
+} = taskSlice.actions;
 export default taskSlice.reducer;

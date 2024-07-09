@@ -50,3 +50,4 @@ jobs:
           docker run -d --name nextjs-container -p 3000:3000 nextjs-app
           # docker network connect my-bridge nextjs-container
           docker image prune -f
+          docker builder prune -f

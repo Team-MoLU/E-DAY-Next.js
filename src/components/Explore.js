@@ -27,6 +27,31 @@ export const Explore = () => {
   };
 
   /**
+   * 현재 currentTask의 값을 update하여 redux에 반영하는 함수
+   * @param {*} updatedTask
+   */
+  const updateCurrentTask = (updatedTask) => {
+    dispatch(
+      updateTask({
+        section: data.name,
+        path: path,
+        updatedTask: updatedTask,
+      })
+    );
+  };
+
+  /**
+   * currentTask의 check 값을 변경하는 함수
+   */
+  const toggleCurrentTaskCheck = () => {
+    const updatedTask = {
+      ...currentTask,
+      check: !currentTask.check,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
+  /**
    * 하위 task의 index를 바탕으로 해당 하위 task의 check 값을 변경하는 함수
    * @param {int} subtaskIndex
    */
@@ -137,7 +162,11 @@ export const Explore = () => {
           <h2>{currentTask.name}</h2>
         ) : (
           <>
-            <input type="checkbox" checked={currentTask.check} readOnly />
+            <input
+              type="checkbox"
+              checked={currentTask.check}
+              onChange={toggleCurrentTaskCheck}
+            />
             <span>{currentTask.name}</span>
           </>
         )}

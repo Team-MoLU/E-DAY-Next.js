@@ -1,16 +1,13 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 import Tree from "../../../components/Tree";
-import Sidebar from "../../../components/Sidebar";
-import { handleNodeClickWithSidebar } from "@/redux/actions/uiAction";
 
 export default function TreeViewPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef(null);
-  const dispatch = useDispatch();
-  const { isOpen: isSidebarOpen } = useSelector((state) => state.ui.sidebar);
+  const router = useRouter();
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prevKey) => prevKey + 1);
@@ -37,12 +34,14 @@ export default function TreeViewPage() {
     };
   }, []);
 
-  const onNodeClick = useCallback(
-    (node, path) => {
-      dispatch(handleNodeClickWithSidebar(node, path));
-    },
-    [dispatch]
-  );
+  // TODO : 수정 필요
+  const onNodeClick = (nodeId) => {
+    router.push(`task/`); // ${nodeId}
+  };
+
+  const handleContextMenu = useCallback((e) => {
+    e.preventDefault();
+  }, []);
 
   return (
     <div
@@ -73,6 +72,7 @@ export default function TreeViewPage() {
           position: "relative",
           overflow: "hidden",
         }}
+        onContextMenu={handleContextMenu}
       >
         {containerSize.width > 0 && containerSize.height > 0 && (
           <Tree
@@ -83,7 +83,6 @@ export default function TreeViewPage() {
           />
         )}
       </div>
-      {isSidebarOpen && <Sidebar />}
     </div>
   );
 }

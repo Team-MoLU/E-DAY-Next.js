@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addTask,
@@ -88,7 +88,7 @@ export default function TaskPage() {
       dispatch(
         addTask({
           section: data.name,
-          path: path, // root 하위에 바로 추가
+          path: path,
           newTask: newTask,
         })
       );
@@ -210,6 +210,17 @@ export default function TaskPage() {
         }}
       >
         <div className="main-view-content">
+          {/* 오늘 할 일 버튼 */}
+          <button
+            onClick={() => {
+              if (sidebarIsOpen && sidebarActiveContent === "taskDetail") {
+                dispatch(toggleSidebar());
+              }
+              router.push(`/app`);
+            }}
+          >
+            오늘 할 일
+          </button>
           {/* 트리뷰 버튼 */}
           <button
             onClick={() => {
@@ -218,27 +229,9 @@ export default function TaskPage() {
           >
             트리뷰
           </button>
-          {/* 상세 버튼 */}
-          <button
-            onClick={() => {
-              dispatch(setSelectedTask({ ...currentTask, path }));
-              dispatch(setSidebarContent("taskDetail"));
-              // side view가 꺼져있으면 켜기
-              if (sidebarIsOpen === false) {
-                dispatch(toggleSidebar());
-              }
-              // side view 가 켜져있고, 이미 taskDetail 이면, 끄기
-              else if (sidebarActiveContent === "taskDetail") {
-                dispatch(toggleSidebar());
-              }
-            }}
-          >
-            상세
-          </button>
           {/* 탐색 버튼 */}
           <button
             onClick={() => {
-              dispatch(setSelectedTask({ ...currentTask, path }));
               dispatch(setSidebarContent("explore"));
               // side view가 꺼져있으면 켜기
               if (sidebarIsOpen === false) {
@@ -252,6 +245,25 @@ export default function TaskPage() {
           >
             탐색
           </button>
+          {/* 상세 버튼 */}
+          {currentTask.name !== "root" && (
+            <button
+              onClick={() => {
+                dispatch(setSelectedTask({ ...currentTask, path }));
+                dispatch(setSidebarContent("taskDetail"));
+                // side view가 꺼져있으면 켜기
+                if (sidebarIsOpen === false) {
+                  dispatch(toggleSidebar());
+                }
+                // side view 가 켜져있고, 이미 taskDetail 이면, 끄기
+                else if (sidebarActiveContent === "taskDetail") {
+                  dispatch(toggleSidebar());
+                }
+              }}
+            >
+              상세
+            </button>
+          )}
           {/* 삭제 버튼 */}
           {currentTask.name !== "root" && (
             <button onClick={handleDeleteTask}>삭제</button>

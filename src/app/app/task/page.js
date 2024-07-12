@@ -5,12 +5,13 @@ import {
   addTask,
   deleteTask,
   getTaskByPath,
+  setSelectedTask,
   updateTask,
 } from "@/redux/reducers/taskSlice";
+import { setSidebarContent, toggleSidebar } from "@/redux/reducers/uiSlice";
+import Sidebar from "../../../components/Sidebar";
 import { v4 as uuidv4 } from "uuid";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Explore } from "../../../components/Explore";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { DraggableTask } from "../../../components/DraggableTask";
@@ -26,6 +27,10 @@ export default function TaskPage() {
   useEffect(() => {
     setCurrentTask(getTaskByPath(data, path));
   }, [data]);
+
+  useEffect(() => {
+    dispatch(setSelectedTask({ ...currentTask, path: path }));
+  }, [path]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -130,72 +135,46 @@ export default function TaskPage() {
     setCurrentTask(getTaskByPath(data, newPath));
   };
 
-  // sidebar 관련
-  const sidebarRef = useRef(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [mainViewWidth, setMainViewWidth] = useState(650);
-  const [activeView, setActiveView] = useState("TaskDetail"); // State to manage active view
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-    setMainViewWidth(650);
+  /**
+   * subtask 를 더블클릭했을 때, 해당 task의 하위로 이동하는 함수
+   * @param {*} subtask
+   * @param {*} subtaskPath
+   */
+  const handleSubtaskDoubleClick = (subtask, subtaskPath) => {
+    setCurrentTask(subtask);
+    setPath(subtaskPath);
   };
 
-  const startResizing = useCallback((mouseDownEvent) => {
-    setIsResizing(true);
-  }, []);
-
-  const stopResizing = useCallback(() => {
-    setIsResizing(false);
-  }, []);
-
-  const resize = useCallback(
-    (mouseMoveEvent) => {
-      if (isResizing) {
-        const newMainViewWidth =
-          mouseMoveEvent.clientX -
-          sidebarRef.current.getBoundingClientRect().left;
-        if (newMainViewWidth / window.innerWidth >= 0.78) {
-          setIsSidebarOpen(false);
-        }
-        setMainViewWidth(newMainViewWidth);
-      }
-    },
-    [isResizing]
-  );
-
-  useEffect(() => {
-    window.addEventListener("mousemove", resize);
-    window.addEventListener("mouseup", stopResizing);
-    return () => {
-      window.removeEventListener("mousemove", resize);
-      window.removeEventListener("mouseup", stopResizing);
-    };
-  }, [resize, stopResizing]);
+  // sidebar 관련
+  const {
+    isOpen: sidebarIsOpen,
+    activeContent: sidebarActiveContent,
+    width: sidebarWidth,
+  } = useSelector((state) => state.ui.sidebar);
 
   // view return
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="task-page">
         <div
-          ref={sidebarRef}
           className="main-view"
           style={{
-            width: isSidebarOpen ? mainViewWidth : "100%",
+            width: sidebarIsOpen ? `calc(100% - ${sidebarWidth}px)` : "100%",
           }}
         >
           <div className="main-view-content">
             {/* 상세 버튼 */}
             <button
               onClick={() => {
-                if (isSidebarOpen === false) {
-                  setActiveView("TaskDetail");
-                  toggleSidebar();
-                } else if (activeView === "TaskDetail") {
-                  toggleSidebar();
-                } else {
-                  setActiveView("TaskDetail");
+                dispatch(setSelectedTask({ ...currentTask, path }));
+                dispatch(setSidebarContent("taskDetail"));
+                // side view가 꺼져있으면 켜기
+                if (sidebarIsOpen === false) {
+                  dispatch(toggleSidebar());
+                }
+                // side view 가 켜져있고, 이미 taskDetail 이면, 끄기
+                else if (sidebarActiveContent === "taskDetail") {
+                  dispatch(toggleSidebar());
                 }
               }}
             >
@@ -204,13 +183,15 @@ export default function TaskPage() {
             {/* 탐색 버튼 */}
             <button
               onClick={() => {
-                if (isSidebarOpen === false) {
-                  setActiveView("Explore");
-                  toggleSidebar();
-                } else if (activeView === "Explore") {
-                  toggleSidebar();
-                } else {
-                  setActiveView("Explore");
+                dispatch(setSelectedTask({ ...currentTask, path }));
+                dispatch(setSidebarContent("explore"));
+                // side view가 꺼져있으면 켜기
+                if (sidebarIsOpen === false) {
+                  dispatch(toggleSidebar());
+                }
+                // side view 가 켜져있고, 이미 explore 이면, 끄기
+                else if (sidebarActiveContent === "explore") {
+                  dispatch(toggleSidebar());
                 }
               }}
             >
@@ -278,9 +259,8 @@ export default function TaskPage() {
                     task={task}
                     section={data.name}
                     path={[...path, index]}
-                    onClick={() => {
-                      setCurrentTask(currentTask.children[index]);
-                      setPath([...path, index]);
+                    onDoubleClick={() => {
+                      handleSubtaskDoubleClick(task, [...path, index]);
                     }}
                     onCheckChange={(e) => {
                       toggleSubTaskCheck(index);
@@ -300,139 +280,9 @@ export default function TaskPage() {
               </form>
             </div>
           </div>
-          {isSidebarOpen && (
-            <div
-              className="main-sub-view-resizer"
-              onMouseDown={startResizing}
-            />
-          )}
         </div>
-        {isSidebarOpen && (
-          <div
-            className="sub-view"
-            style={{ width: `calc(100% - ${mainViewWidth}px)` }}
-          >
-            {activeView === "TaskDetail" && (
-              <TaskDetail
-                task={currentTask}
-                onTaskChanged={updateCurrentTask}
-              />
-            )}
-            {activeView === "Explore" && <Explore />}
-          </div>
-        )}
+        {sidebarIsOpen && <Sidebar />}
       </div>
     </DndProvider>
   );
 }
-
-const TaskDetail = ({ task, onTaskChanged }) => {
-  const [memo, setMemo] = useState(task.memo); // memo 상태 추가
-  const [priority, setPriority] = useState(task.priority); // priority 상태 추가
-  const [dateRange, setDateRange] = useState([
-    task.startDate ? new Date(task.startDate) : null,
-    task.endDate ? new Date(task.endDate) : null,
-  ]);
-
-  useEffect(() => {
-    // task prop이 변경될 때 memo, priority, startDate, endDate 값을 업데이트
-    setMemo(task.memo);
-    setPriority(task.priority);
-    setDateRange([
-      task.startDate ? new Date(task.startDate) : null,
-      task.endDate ? new Date(task.endDate) : null,
-    ]);
-  }, [task]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "memo") {
-      setMemo(value); // memo 필드의 입력 값을 memo 상태에 업데이트
-    }
-  };
-
-  // memo 값이 변경된 이후 이를 저장하는 함수
-  const handleInputBlur = () => {
-    const updatedTask = {
-      ...task,
-      memo: memo,
-    };
-    onTaskChanged(updatedTask);
-  };
-
-  // priority 를 클릭하면, 값을 변경하고 이를 update 하는 함수
-  const handlePriorityClick = () => {
-    const newPriority = (priority + 1) % 4; // 우선순위는 0, 1, 2, 3으로 순환
-    setPriority(newPriority);
-
-    const updatedTask = {
-      ...task,
-      priority: newPriority,
-    };
-    onTaskChanged(updatedTask);
-  };
-
-  // date 선택 시, 값을 변경하고 update 하는 함수
-  const handleDateRangeChange = (update) => {
-    setDateRange(update);
-
-    const updatedTask = {
-      ...task,
-      startDate: update[0] ? formatDate(update[0]) : null,
-      endDate: update[1] ? formatDate(update[1]) : null,
-    };
-
-    onTaskChanged(updatedTask);
-  };
-
-  // 날짜를 YYYY-MM-DD 형식의 문자열로 변환하는 함수
-  const formatDate = (date) => {
-    const offset = date.getTimezoneOffset();
-    const adjustedDate = new Date(date.getTime() - offset * 60 * 1000);
-    return adjustedDate.toISOString().split("T")[0];
-  };
-
-  return task.name === "root" ? (
-    <h1>root는 상세가 없어요</h1>
-  ) : (
-    <div className="task-detail">
-      <h1>상세</h1>
-      <div className="task-detail-item">
-        <strong>Name:</strong> <span>{task.name || "Not set"}</span>
-      </div>
-      {/* 날짜 */}
-      <div className="task-detail-item">
-        <strong>Date Range:</strong>{" "}
-        <DatePicker
-          selectsRange={true}
-          startDate={dateRange[0]}
-          endDate={dateRange[1]}
-          onChange={handleDateRangeChange}
-          dateFormat="yyyy-MM-dd"
-          isClearable
-          timeZone="UTC"
-        />
-      </div>
-      {/* 우선순위 */}
-      <div className="task-detail-item">
-        <strong>Priority:</strong>{" "}
-        <span
-          style={{ cursor: "pointer", textDecoration: "underline" }}
-          onClick={handlePriorityClick}
-        >
-          {priority}
-        </span>
-      </div>
-      {/* 메모 */}
-      <div className="task-detail-item">
-        <strong>Memo:</strong>
-        <textarea
-          name="memo"
-          value={memo}
-          onChange={handleInputChange}
-          onBlur={handleInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
-        />
-      </div>
-    </div>
-  );
-};

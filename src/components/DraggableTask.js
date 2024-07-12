@@ -4,6 +4,7 @@ import { useDrag } from "react-dnd";
 export const DraggableTask = ({
   task,
   onClick,
+  onDoubleClick,
   onCheckChange,
   section,
   path,
@@ -25,11 +26,13 @@ export const DraggableTask = ({
       className="task-item"
       style={{ opacity: isDragging ? 0.5 : 1 }}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
     >
       <input
         type="checkbox"
         checked={task.check}
         onClick={(e) => e.stopPropagation()}
+        onDoubleClick={(e) => e.stopPropagation()}
         onChange={onCheckChange}
       />
       <span>{task.name}</span>

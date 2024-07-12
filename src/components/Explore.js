@@ -114,7 +114,7 @@ export const Explore = () => {
             <li
               key={index}
               className="task-item"
-              onClick={() => {
+              onDoubleClick={() => {
                 setCurrentTask(currentTask.children[index]);
                 setPath([...path, index]);
               }}
@@ -123,6 +123,7 @@ export const Explore = () => {
                 type="checkbox"
                 checked={task.check}
                 onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
+                onDoubleClick={(e) => e.stopPropagation()}
                 readOnly
               />
               <span>{task.name}</span>

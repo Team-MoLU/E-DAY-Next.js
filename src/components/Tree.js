@@ -1,12 +1,7 @@
-import React, {
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import React, { useRef, useEffect, useCallback, useMemo } from "react";
 import * as d3 from "d3";
 import { useSelector } from "react-redux";
+import common from "@/lib/common/common_fn";
 
 // 트리 컴포넌트
 const Tree = React.memo(({ width, height, onNodeClick }) => {
@@ -160,32 +155,6 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
 
     simulationRef.current.alpha(0.3).restart();
 
-    // 링크 렌더링
-    const link = g
-      .append("g")
-      .attr("stroke", "#999")
-      .attr("stroke-opacity", 0.6)
-      .selectAll("line")
-      .data(links)
-      .join("line");
-
-    // 랜덤 색상 생성 함수
-    const getRandomColor = () => {
-      const colors = [
-        "red",
-        "green",
-        "yellow",
-        "purple",
-        "orange",
-        "pink",
-        "cyan",
-        "magenta",
-        "blue",
-        "skyblue",
-      ];
-      return colors[Math.floor(Math.random() * colors.length)];
-    };
-
     // 노드의 경로를 구하는 함수
     const findNodePathById = (nodeId, tree = data, path = []) => {
       if (tree.id === nodeId) {
@@ -205,6 +174,43 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       return null;
     };
 
+    // 최상위 노드의 id 반환 함수
+    function findTopLevelParentId(tree, targetId, currentPath = []) {
+      if (tree.id === targetId) {
+        return currentPath.length > 0 ? currentPath[0] : tree.id;
+      }
+
+      if (tree.children && tree.children.length > 0) {
+        for (let i = 0; i < tree.children.length; i++) {
+          const result = findTopLevelParentId(
+            tree.children[i],
+            targetId,
+            currentPath.length === 0 ? [tree.children[i].id] : currentPath
+          );
+          if (result) return result;
+        }
+      }
+
+      return null;
+    }
+
+    // 링크 렌더링
+    const link = g
+      .append("g")
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("stroke", (d) => {
+        // 타겟 노드의 상태를 기준으로 색상 결정
+        if (d.target.data.check) {
+          const topLevelParentId = findTopLevelParentId(data, d.target.data.id);
+          return common.getLighterColorFromUuid(topLevelParentId, 15);
+        } else {
+          return "gray";
+        }
+      });
+
     // 노드 렌더링
     const node = g
       .append("g")
@@ -220,7 +226,16 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
 
     node
       .append("circle")
-      .attr("fill", (d) => (d.depth === 0 ? getRandomColor() : "gray"))
+      .attr("fill", (d) =>
+        d.depth === 0
+          ? common.getColorFromUuid(d.data.id)
+          : d.data.check
+          ? common.getLighterColorFromUuid(
+              findTopLevelParentId(data, d.data.id),
+              15
+            )
+          : "gray"
+      )
       .attr("stroke-width", 1.5)
       .attr("r", (d) => (d.depth === 0 ? 7 : 5))
       .style("cursor", "pointer");

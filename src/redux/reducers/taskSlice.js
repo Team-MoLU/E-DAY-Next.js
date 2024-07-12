@@ -264,8 +264,15 @@ const deleteTaskAtPath = (state, path) => {
 
 const taskSlice = createSlice({
   name: "tasks",
-  initialState,
+  initialState: {
+    ...initialState,
+    selectedTask: null,
+  },
   reducers: {
+    // (Tree에서) task 선택 시 선택된 task 저장
+    setSelectedTask: (state, action) => {
+      state.selectedTask = action.payload;
+    },
     // 새로운 task 추가
     addTask: (state, action) => {
       const { section, path, newTask } = action.payload;
@@ -322,6 +329,8 @@ const taskSlice = createSlice({
 });
 
 export const {
+  setSelectedTask,
+  handleNodeClick,
   addTask,
   updateTask,
   deleteTask,

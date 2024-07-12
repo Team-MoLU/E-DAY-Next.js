@@ -2,12 +2,15 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Tree from "../../../components/Tree";
+import { getTaskByPath, setSelectedTask } from "@/redux/reducers/taskSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function TreeViewPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef(null);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prevKey) => prevKey + 1);
@@ -34,9 +37,10 @@ export default function TreeViewPage() {
     };
   }, []);
 
-  // TODO : 수정 필요
-  const onNodeClick = (nodeId) => {
-    router.push(`task/`); // ${nodeId}
+  const onNodeClick = (data, path) => {
+    const task = getTaskByPath(data, path);
+    dispatch(setSelectedTask({ ...task, path: path }));
+    router.push(`task/`);
   };
 
   const handleContextMenu = useCallback((e) => {

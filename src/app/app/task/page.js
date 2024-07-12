@@ -15,19 +15,28 @@ import { v4 as uuidv4 } from "uuid";
 import "react-datepicker/dist/react-datepicker.css";
 import { DraggableTask } from "../../../components/DraggableTask";
 import { useDrop } from "react-dnd";
+import { useRouter } from "next/navigation";
 
 export default function TaskPage() {
   // task data 관련
   const data = useSelector((state) => state.tasks.root);
+  const selectedTask = useSelector((state) => state.tasks.selectedTask);
   const dispatch = useDispatch();
-  const [currentTask, setCurrentTask] = useState(data);
-  const [path, setPath] = useState([]);
+  const router = useRouter();
+  const [currentTask, setCurrentTask] = useState(
+    selectedTask === null ? data : selectedTask
+  );
+  const [path, setPath] = useState(
+    selectedTask === null ? [] : selectedTask.path
+  );
   const [newTaskName, setNewTaskName] = useState("");
 
+  // data 변경 시, currentTask refresh
   useEffect(() => {
     setCurrentTask(getTaskByPath(data, path));
   }, [data]);
 
+  // path 변경 시, currentTask refresh
   useEffect(() => {
     dispatch(setSelectedTask({ ...currentTask, path: path }));
   }, [path]);
@@ -46,7 +55,7 @@ export default function TaskPage() {
   };
 
   /**
-   * 현재 currentTask의 값을 update하는 함수
+   * 현재 currentTask의 값을 update하여 redux에 반영하는 함수
    * @param {*} updatedTask
    */
   const updateCurrentTask = (updatedTask) => {
@@ -201,6 +210,14 @@ export default function TaskPage() {
         }}
       >
         <div className="main-view-content">
+          {/* 트리뷰 버튼 */}
+          <button
+            onClick={() => {
+              router.push(`tree-view/`);
+            }}
+          >
+            트리뷰
+          </button>
           {/* 상세 버튼 */}
           <button
             onClick={() => {

@@ -1,9 +1,13 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getTaskByPath } from "@/redux/reducers/taskSlice";
+import {
+  getTaskByPath,
+  updateTask,
+  moveTask,
+} from "@/redux/reducers/taskSlice";
 import { useDrop } from "react-dnd";
-import { moveTask } from "@/redux/reducers/taskSlice";
+import { DraggableTask } from "./DraggableTask";
 
 export const Explore = () => {
   // task data 관련
@@ -11,6 +15,35 @@ export const Explore = () => {
   const dispatch = useDispatch();
   const [currentTask, setCurrentTask] = useState(data);
   const [path, setPath] = useState([]);
+
+  /**
+   * subtask 를 더블클릭했을 때, 해당 task의 하위로 이동하는 함수
+   * @param {*} subtask
+   * @param {*} subtaskPath
+   */
+  const handleSubtaskDoubleClick = (subtask, subtaskPath) => {
+    setCurrentTask(subtask);
+    setPath(subtaskPath);
+  };
+
+  /**
+   * 하위 task의 index를 바탕으로 해당 하위 task의 check 값을 변경하는 함수
+   * @param {int} subtaskIndex
+   */
+  const toggleSubTaskCheck = (subtaskIndex) => {
+    const updatedTask = {
+      ...currentTask.children[subtaskIndex],
+      check: !currentTask.children[subtaskIndex].check,
+    };
+
+    dispatch(
+      updateTask({
+        section: data.name,
+        path: [...path, subtaskIndex],
+        updatedTask: updatedTask,
+      })
+    );
+  };
 
   useEffect(() => {
     const updatedCurrentTask = getTaskByPath(data, path);
@@ -28,6 +61,7 @@ export const Explore = () => {
     }
   }, [data]);
 
+  // Drag and Drop 관련
   const handleDrop = useCallback(
     (item) => {
       if (item.section === data.name) {
@@ -111,23 +145,18 @@ export const Explore = () => {
         {/* 하위 Task의 List */}
         <ul>
           {currentTask.children.map((task, index) => (
-            <li
+            <DraggableTask
               key={index}
-              className="task-item"
+              task={task}
+              section={data.name}
+              path={[...path, index]}
               onDoubleClick={() => {
-                setCurrentTask(currentTask.children[index]);
-                setPath([...path, index]);
+                handleSubtaskDoubleClick(task, [...path, index]);
               }}
-            >
-              <input
-                type="checkbox"
-                checked={task.check}
-                onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
-                onDoubleClick={(e) => e.stopPropagation()}
-                readOnly
-              />
-              <span>{task.name}</span>
-            </li>
+              onCheckChange={(e) => {
+                toggleSubTaskCheck(index);
+              }}
+            />
           ))}
         </ul>
       </div>

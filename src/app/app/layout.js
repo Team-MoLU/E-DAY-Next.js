@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { Provider } from "react-redux";
 import store from "../../redux/store";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 export default function AppLayout({ children }) {
   return (
@@ -18,7 +20,9 @@ export default function AppLayout({ children }) {
         <Link href="/app/trash">trash</Link>
       </div>
       <Provider store={store}>
-        <div className="main-content">{children}</div>
+        <DndProvider backend={HTML5Backend}>
+          <div className="main-content">{children}</div>
+        </DndProvider>
       </Provider>
     </>
   );

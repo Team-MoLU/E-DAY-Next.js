@@ -6,103 +6,15 @@ import React, {
   useState,
 } from "react";
 import * as d3 from "d3";
-import { useSelector, useDispatch } from "react-redux";
-import { updateTask } from "../redux/reducers/taskSlice";
-
-// 컨텍스트 메뉴 컴포넌트
-const ContextMenu = React.memo(({ x, y, node, onClose }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const menuRef = useRef(null);
-
-  // 컴포넌트 마운트 시 메뉴를 보이게 함
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
-  // 외부 클릭 감지 및 메뉴 닫기
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsVisible(false);
-        setTimeout(onClose, 200); // 페이드아웃 애니메이션 완료 후 메뉴 닫기
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
-
-  // 메뉴 옵션 클릭 처리
-  const handleOptionClick = (option) => {
-    console.log(`${option} clicked`, node);
-    setIsVisible(false);
-    setTimeout(onClose, 200);
-  };
-
-  // 메뉴 옵션 렌더링
-  const renderMenuOptions = () => {
-    return ["생성", "삭제", "이동"].map((option) => (
-      <div
-        key={option}
-        onClick={() => handleOptionClick(option)}
-        style={{
-          padding: "8px 16px",
-          cursor: "pointer",
-          transition: "background-color 150ms ease-in-out",
-        }}
-        onMouseEnter={(e) => (e.target.style.backgroundColor = "#f0f0f0")}
-        onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
-      >
-        {option}
-      </div>
-    ));
-  };
-
-  return (
-    <div
-      ref={menuRef}
-      className="context-menu"
-      style={{
-        position: "absolute",
-        top: y,
-        left: x,
-        background: "white",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        padding: "8px 0",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-        zIndex: 1000,
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible
-          ? "scale(1) translateY(0)"
-          : "scale(0.95) translateY(-20px)",
-        transition: "opacity 200ms ease-in-out, transform 200ms ease-in-out",
-      }}
-    >
-      <div
-        style={{
-          padding: "8px 16px",
-          fontWeight: "bold",
-        }}
-      >
-        {node.data.name}
-      </div>
-      {renderMenuOptions()}
-    </div>
-  );
-});
-
-ContextMenu.displayName = "ContextMenu";
+import { useSelector } from "react-redux";
 
 // 트리 컴포넌트
 const Tree = React.memo(({ width, height, onNodeClick }) => {
   const data = useSelector((state) => state.tasks.root);
-  const dispatch = useDispatch();
   const svgRef = useRef(null);
   const zoomRef = useRef(null);
   const scaleRef = useRef(d3.zoomIdentity);
   const simulationRef = useRef(null);
-  const [contextMenu, setContextMenu] = useState(null);
 
   const memoizedData = useMemo(() => data.children || [], [data]);
 
@@ -132,44 +44,6 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .on("end", dragended);
   }, []);
 
-  // 노드 우클릭 시 컨텍스트 메뉴 표시
-  const handleNodeContextMenu = useCallback(
-    (event, d) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const [x, y] = d3.pointer(event, svgRef.current);
-      // 새로운 노드를 우클릭할 때 컨텍스트 메뉴 위치 업데이트
-      setContextMenu({
-        x: x + width / 2,
-        y: y + height / 2,
-        node: d,
-      });
-    },
-    [width, height]
-  );
-
-  const handleSvgContextMenu = useCallback((event) => {
-    if (event.target === event.currentTarget) {
-      event.preventDefault();
-      setContextMenu(null);
-    }
-  }, []);
-
-  // 컨텍스트 메뉴 닫기
-  const closeContextMenu = useCallback(() => {
-    setContextMenu(null);
-  }, []);
-
-  // SVG 배경 클릭 시 컨텍스트 메뉴 닫기
-  const handleSvgClick = useCallback(
-    (event) => {
-      if (event.target.tagName === "svg") {
-        closeContextMenu();
-      }
-    },
-    [closeContextMenu]
-  );
-
   // 줌 기능 설정
   const setupZoom = useCallback(() => {
     const svg = d3.select(svgRef.current);
@@ -197,9 +71,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     svg
       .attr("width", "100%")
       .attr("height", "100%")
-      .attr("viewBox", [-width / 2, -height / 2, width, height])
-      .on("contextmenu", handleSvgContextMenu)
-      .on("click", handleSvgClick);
+      .attr("viewBox", [-width / 2, -height / 2, width, height]);
 
     const g = svg.append("g");
 
@@ -342,11 +214,9 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .call(drag())
       .on("click", (event, d) => {
         event.stopPropagation();
-        closeContextMenu();
-        const path = findNodePathById(d.data.id);
-        onNodeClick(d.data, path);
-      })
-      .on("contextmenu", handleNodeContextMenu);
+        //const path = findNodePathById(d.data.id);
+        onNodeClick(d.data.id);
+      });
 
     node
       .append("circle")
@@ -394,7 +264,6 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     }
     svg.call(zoom);
     svg.on("dblclick.zoom", null);
-    svg.on("contextmenu", handleSvgContextMenu);
 
     // 연결된 노드 강조 함수
     const highlightConnectedNodes = (d, opacity) => {
@@ -462,18 +331,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     return () => {
       simulationRef.current.stop();
     };
-  }, [
-    data,
-    memoizedData,
-    width,
-    height,
-    onNodeClick,
-    drag,
-    handleNodeContextMenu,
-    handleSvgContextMenu,
-    closeContextMenu,
-    handleSvgClick,
-  ]);
+  }, [data, memoizedData, width, height, onNodeClick, drag]);
 
   // 줌 초기 설정
   useEffect(() => {
@@ -491,14 +349,6 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
         ref={svgRef}
         style={{ width: "100%", height: "100%", display: "block" }}
       />
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          node={contextMenu.node}
-          onClose={closeContextMenu}
-        />
-      )}
     </div>
   );
 });

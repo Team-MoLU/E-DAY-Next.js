@@ -1,65 +1,86 @@
-import React, { useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { updateTask, setSelectedTask } from "@/redux/reducers/taskSlice";
 import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-const TaskDetailSidebar = () => {
+export default function TaskDetailSidebar() {
   const dispatch = useDispatch();
   const selectedTask = useSelector((state) => state.tasks.selectedTask);
+  const [name, setName] = useState(""); // name 상태 추가
+  const [memo, setMemo] = useState(""); // memo 상태 추가
 
-  const handleInputChange = useCallback(
-    (e) => {
-      const { name, value } = e.target;
-      if (selectedTask) {
-        const updatedTask = { ...selectedTask, [name]: value };
-        dispatch(setSelectedTask(updatedTask));
-        dispatch(
-          updateTask({
-            section: "root",
-            path: selectedTask.path,
-            updatedTask: updatedTask,
-          })
-        );
-      }
-    },
-    [dispatch, selectedTask]
-  );
+  useEffect(() => {
+    setName(selectedTask.name);
+    setMemo(selectedTask.memo);
+  }, [selectedTask]);
 
-  const handlePriorityClick = useCallback(() => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "name") {
+      setName(value);
+    }
+    if (name === "memo") {
+      setMemo(value); // memo 필드의 입력 값을 memo 상태에 업데이트
+    }
+  };
+
+  const handleInputBlur = () => {
+    const updatedName = name;
+    const updatedMemo = memo;
+
     if (selectedTask) {
-      const newPriority = (selectedTask.priority + 1) % 4;
-      const updatedTask = { ...selectedTask, priority: newPriority };
-      dispatch(setSelectedTask(updatedTask));
+      let { path, ...updatedTask } = selectedTask;
+      updatedTask = {
+        ...updatedTask,
+        name: updatedName,
+        memo: updatedMemo,
+      };
+      dispatch(setSelectedTask({ ...updatedTask, path: path }));
       dispatch(
         updateTask({
           section: "root",
-          path: selectedTask.path,
+          path: path,
           updatedTask: updatedTask,
         })
       );
     }
-  }, [dispatch, selectedTask]);
+  };
 
-  const handleDateRangeChange = useCallback(
-    (update) => {
-      if (selectedTask) {
-        const updatedTask = {
-          ...selectedTask,
-          startDate: update[0] ? formatDate(update[0]) : null,
-          endDate: update[1] ? formatDate(update[1]) : null,
-        };
-        dispatch(setSelectedTask(updatedTask));
-        dispatch(
-          updateTask({
-            section: "root",
-            path: selectedTask.path,
-            updatedTask: updatedTask,
-          })
-        );
-      }
-    },
-    [dispatch, selectedTask]
-  );
+  const handlePriorityClick = () => {
+    if (selectedTask) {
+      const newPriority = (selectedTask.priority + 1) % 4;
+      let { path, ...updatedTask } = selectedTask;
+      updatedTask = { ...updatedTask, priority: newPriority };
+      dispatch(setSelectedTask({ ...updatedTask, path: path }));
+      dispatch(
+        updateTask({
+          section: "root",
+          path: path,
+          updatedTask: updatedTask,
+        })
+      );
+    }
+  };
+
+  const handleDateRangeChange = (update) => {
+    if (selectedTask) {
+      let { path, ...updatedTask } = selectedTask;
+      updatedTask = {
+        ...updatedTask,
+        startDate: update[0] ? formatDate(update[0]) : null,
+        endDate: update[1] ? formatDate(update[1]) : null,
+      };
+      dispatch(setSelectedTask({ ...updatedTask, path: path }));
+      dispatch(
+        updateTask({
+          section: "root",
+          path: path,
+          updatedTask: updatedTask,
+        })
+      );
+    }
+  };
 
   const formatDate = (date) => {
     const offset = date.getTimezoneOffset();
@@ -67,67 +88,54 @@ const TaskDetailSidebar = () => {
     return adjustedDate.toISOString().split("T")[0];
   };
 
-  const content = useMemo(() => {
-    if (!selectedTask) {
-      return <div>선택된 태스크가 없습니다.</div>;
-    }
+  if (!selectedTask) {
+    return <div>선택된 태스크가 없습니다.</div>;
+  }
 
-    return (
-      <>
-        <div>
-          <label>Name:</label>
-          <input
-            type="text"
-            name="name"
-            value={selectedTask.name}
-            onChange={handleInputChange}
-            onBlur={handleInputChange}
-          />
-        </div>
-        <div>
-          <label>Date Range:</label>
-          <DatePicker
-            selectsRange={true}
-            startDate={
-              selectedTask.startDate ? new Date(selectedTask.startDate) : null
-            }
-            endDate={
-              selectedTask.endDate ? new Date(selectedTask.endDate) : null
-            }
-            onChange={handleDateRangeChange}
-            dateFormat="yyyy-MM-dd"
-            isClearable
-            timeZone="UTC"
-          />
-        </div>
-        <div>
-          <label>Priority:</label>
-          <span
-            style={{ cursor: "pointer", textDecoration: "underline" }}
-            onClick={handlePriorityClick}
-          >
-            {selectedTask.priority}
-          </span>
-        </div>
-        <div>
-          <label>Memo:</label>
-          <textarea
-            name="memo"
-            value={selectedTask.memo || ""}
-            onChange={handleInputChange}
-            onBlur={handleInputChange}
-          />
-        </div>
-      </>
-    );
-  }, [
-    selectedTask,
-    handleInputChange,
-    handlePriorityClick,
-    handleDateRangeChange,
-  ]);
-
-  return <div className="task-detail">{content}</div>;
-};
-
-export default React.memo(TaskDetailSidebar);
+  return (
+    <>
+      <div>
+        <label>Name:</label>
+        <input
+          type="text"
+          name="name"
+          value={name}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+        />
+      </div>
+      <div>
+        <label>Date Range:</label>
+        <DatePicker
+          selectsRange={true}
+          startDate={
+            selectedTask.startDate ? new Date(selectedTask.startDate) : null
+          }
+          endDate={selectedTask.endDate ? new Date(selectedTask.endDate) : null}
+          onChange={handleDateRangeChange}
+          dateFormat="yyyy-MM-dd"
+          isClearable
+          timeZone="UTC"
+        />
+      </div>
+      <div>
+        <label>Priority:</label>
+        <span
+          style={{ cursor: "pointer", textDecoration: "underline" }}
+          onClick={handlePriorityClick}
+        >
+          {selectedTask.priority}
+        </span>
+      </div>
+      <div>
+        <label>Memo:</label>
+        <textarea
+          name="memo"
+          value={memo}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
+        />
+      </div>
+    </>
+  );
+}

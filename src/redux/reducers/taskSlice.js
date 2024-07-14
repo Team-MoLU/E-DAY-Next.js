@@ -208,6 +208,9 @@ const initialState = {
 export const getTaskByPath = (tree, path) => {
   let currentNode = tree;
   for (let index of path) {
+    if (!currentNode.children || !currentNode.children[index]) {
+      return null; // Invalid path
+    }
     currentNode = currentNode.children[index];
   }
   return currentNode;
@@ -300,8 +303,26 @@ const taskSlice = createSlice({
         deleteTaskAtPath(state[section], path);
       }
     },
-    // Todo: moveTask
-    // Todo: restoreTask : 휴지통에서 복구
+    // trash에서 task를 복구
+    restoreTask: (state, action) => {
+      const { path } = action.payload;
+      const taskToRestore = getTaskByPath(state.trash, path);
+      if (taskToRestore) {
+        addTaskAtPath(state.root, [], taskToRestore); // Add to root
+        deleteTaskAtPath(state.trash, path); // Remove from trash
+      }
+    },
+    // task 이동
+    moveTask: (state, action) => {
+      const { fromSection, fromPath, toSection, toPath } = action.payload;
+      if (state[fromSection] && state[toSection]) {
+        const taskToMove = getTaskByPath(state[fromSection], fromPath);
+        if (taskToMove) {
+          addTaskAtPath(state[toSection], toPath, taskToMove); // Add to new location
+          deleteTaskAtPath(state[fromSection], fromPath); // Delete from original location
+        }
+      }
+    },
     // Todo: archiveTask
     // Todo: unarchiveTask
   },
@@ -314,5 +335,7 @@ export const {
   updateTask,
   deleteTask,
   dropTask,
+  restoreTask,
+  moveTask,
 } = taskSlice.actions;
 export default taskSlice.reducer;

@@ -1,7 +1,11 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { dropTask, getTaskByPath } from "@/redux/reducers/taskSlice";
+import {
+  dropTask,
+  getTaskByPath,
+  restoreTask,
+} from "@/redux/reducers/taskSlice";
 
 export default function TrashPage() {
   // task data 관련
@@ -22,6 +26,22 @@ export default function TrashPage() {
     dispatch(
       dropTask({
         section: data.name,
+        path: path,
+      })
+    );
+    // currentTask를 부모 Task로 변경
+    const newPath = path.slice(0, -1);
+    setPath(newPath);
+    setCurrentTask(getTaskByPath(data, newPath));
+  };
+
+  /**
+   * 현재 task를 trash에서 root 의 하위로 복구하고, 부모 task로 이동하는 함수
+   */
+  const handleRestoreTask = () => {
+    // dispatch 통해서 현재 node 삭제
+    dispatch(
+      restoreTask({
         path: path,
       })
     );
@@ -93,6 +113,10 @@ export default function TrashPage() {
           {currentTask.name !== "trash" && (
             <button onClick={handleDropTask}>영구 삭제</button>
           )}
+          {/* 복구 버튼 */}
+          {currentTask.name !== "trash" && (
+            <button onClick={handleRestoreTask}>복구</button>
+          )}
           <div>
             {/* 경로 */}
             <div>
@@ -128,8 +152,8 @@ export default function TrashPage() {
               <h2>{currentTask.name}</h2>
             ) : (
               <>
-                <input type="checkbox" checked={currentTask.check} />
-                <sapn>{currentTask.name}</sapn>
+                <input type="checkbox" checked={currentTask.check} readOnly />
+                <span>{currentTask.name}</span>
               </>
             )}
             {/* 하위 Task의 List */}
@@ -147,6 +171,7 @@ export default function TrashPage() {
                     type="checkbox"
                     checked={task.check}
                     onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
+                    readOnly
                   />
                   <span>{task.name}</span>
                 </li>

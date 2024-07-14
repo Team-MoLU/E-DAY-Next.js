@@ -220,8 +220,8 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .call(drag())
       .on("click", (event, d) => {
         event.stopPropagation();
-        //const path = findNodePathById(d.data.id);
-        onNodeClick(d.data.id);
+        const path = findNodePathById(d.data.id);
+        onNodeClick(data, path);
       });
 
     node

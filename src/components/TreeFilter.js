@@ -91,7 +91,6 @@ const TreeFilter = () => {
               </button>
             </div>
           </div>
-          {/* Rest of the filter content */}
           <div className="mb-4">
             <label className="block mb-2 font-semibold">검색</label>
             <input

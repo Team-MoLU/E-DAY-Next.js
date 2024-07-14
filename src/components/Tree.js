@@ -28,7 +28,10 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       // 검색어 필터링
       if (
         filter.searchTerm &&
-        !node.name.toLowerCase().includes(filter.searchTerm.toLowerCase())
+        !node.name
+          .toLowerCase()
+          .replace(/\s+/g, "")
+          .includes(filter.searchTerm.toLowerCase().replace(/\s+/g, ""))
       ) {
         return false;
       }
@@ -338,7 +341,10 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .filter(
         (d) =>
           filter.searchTerm &&
-          d.data.name.toLowerCase().includes(filter.searchTerm) &&
+          d.data.name
+            .toLowerCase()
+            .replace(/\s+/g, "")
+            .includes(filter.searchTerm.toLowerCase().replace(/\s+/g, "")) &&
           d.data._matches
       )
       .append("circle")

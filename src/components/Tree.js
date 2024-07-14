@@ -6,12 +6,103 @@ import common from "@/lib/common/common_fn";
 // 트리 컴포넌트
 const Tree = React.memo(({ width, height, onNodeClick }) => {
   const data = useSelector((state) => state.tasks.root);
+  const filter = useSelector((state) => state.ui.treeFilter);
   const svgRef = useRef(null);
   const zoomRef = useRef(null);
   const scaleRef = useRef(d3.zoomIdentity);
   const simulationRef = useRef(null);
 
   const memoizedData = useMemo(() => data.children || [], [data]);
+
+  const filteredData = useMemo(() => {
+    if (filter.selectedRoots.length === 0) {
+      return memoizedData;
+    }
+    return memoizedData.filter((root) =>
+      filter.selectedRoots.includes(root.id)
+    );
+  }, [memoizedData, filter.selectedRoots]);
+
+  const filterNode = useCallback(
+    (node, isRoot = false) => {
+      // 검색어 필터링
+      if (
+        filter.searchTerm &&
+        !node.name.toLowerCase().includes(filter.searchTerm.toLowerCase())
+      ) {
+        return false;
+      }
+
+      // 선택된 루트 필터링
+      if (
+        filter.selectedRoots.length > 0 &&
+        isRoot &&
+        !filter.selectedRoots.includes(node.id)
+      ) {
+        return false;
+      }
+
+      // 루트 노드 필터링
+      if (isRoot) {
+        if (
+          filter.showRootsWithChildren &&
+          (!node.children || node.children.length === 0)
+        ) {
+          return false;
+        }
+      }
+
+      // 완료된 할 일 필터링
+      if (
+        !filter.showCompletedTasks &&
+        node.check &&
+        allChildrenCompleted(node)
+      ) {
+        return false;
+      }
+
+      return true;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filter]
+  );
+
+  const allChildrenCompleted = useCallback((node) => {
+    if (!node.children || node.children.length === 0) {
+      return true;
+    }
+    return node.children.every(
+      (child) => child.check && allChildrenCompleted(child)
+    );
+  }, []);
+
+  const processedData = useMemo(() => {
+    const processTree = (node, isRoot = false) => {
+      if (!node) return null;
+
+      const nodeMatches = filterNode(node, isRoot);
+      let filteredChildren = [];
+
+      if (node.children) {
+        filteredChildren = node.children
+          .map((child) => processTree(child, false))
+          .filter(Boolean);
+      }
+
+      if (nodeMatches || filteredChildren.length > 0) {
+        return {
+          ...node,
+          children: filteredChildren,
+          _matches:
+            nodeMatches || filteredChildren.some((child) => child._matches),
+        };
+      }
+
+      return null;
+    };
+
+    return filteredData.map((root) => processTree(root, true)).filter(Boolean);
+  }, [filteredData, filterNode]);
 
   // 노드 드래그 기능 구현
   const drag = useCallback(() => {
@@ -57,10 +148,12 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
 
   // 트리 렌더링 함수
   const renderTree = useCallback(() => {
-    if (!memoizedData.length) return;
-
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
+
+    if (!processedData.length) {
+      return;
+    }
 
     // SVG 설정
     svg
@@ -71,7 +164,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     const g = svg.append("g");
 
     // 데이터 계층 구조 생성
-    const roots = memoizedData.map((d) => d3.hierarchy(d));
+    const roots = processedData.map((d) => d3.hierarchy(d));
     const links = roots.flatMap((root) => root.links());
     const nodes = roots.flatMap((root) => root.descendants());
 
@@ -240,6 +333,25 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .attr("r", (d) => (d.depth === 0 ? 7 : 5))
       .style("cursor", "pointer");
 
+    // 검색어와 일치하는 노드 강조
+    node
+      .filter(
+        (d) =>
+          filter.searchTerm &&
+          d.data.name.toLowerCase().includes(filter.searchTerm) &&
+          d.data._matches
+      )
+      .append("circle")
+      .attr("r", (d) => (d.depth === 0 ? 10 : 8))
+      .attr("fill", "none")
+      .attr("stroke", (d) =>
+        common.getLighterColorFromUuid(
+          findTopLevelParentId(data, d.data.id),
+          15
+        )
+      )
+      .attr("stroke-width", 2);
+
     // 레이블 렌더링
     const labels = node
       .append("text")
@@ -346,7 +458,15 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     return () => {
       simulationRef.current.stop();
     };
-  }, [data, memoizedData, width, height, onNodeClick, drag]);
+  }, [
+    data,
+    filter.searchTerm,
+    processedData,
+    width,
+    height,
+    onNodeClick,
+    drag,
+  ]);
 
   // 줌 초기 설정
   useEffect(() => {
@@ -358,12 +478,30 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     renderTree();
   }, [renderTree]);
 
+  // 빈 상태 메시지 컴포넌트
+  const EmptyStateMessage = () => (
+    <div
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        textAlign: "center",
+        color: "#666",
+        fontSize: "1.2rem",
+      }}
+    >
+      할 일이 존재하지 않습니다
+    </div>
+  );
+
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <svg
         ref={svgRef}
         style={{ width: "100%", height: "100%", display: "block" }}
       />
+      {!processedData.length && <EmptyStateMessage />}
     </div>
   );
 });

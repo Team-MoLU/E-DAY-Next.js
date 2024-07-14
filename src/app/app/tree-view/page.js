@@ -2,19 +2,15 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Tree from "../../../components/Tree";
+import TreeFilter from "@/components/TreeFilter";
 import { getTaskByPath, setSelectedTask } from "@/redux/reducers/taskSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 export default function TreeViewPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
-
-  const handleRefresh = useCallback(() => {
-    setRefreshKey((prevKey) => prevKey + 1);
-  }, []);
 
   useEffect(() => {
     const updateSize = () => {
@@ -72,7 +68,6 @@ export default function TreeViewPage() {
       >
         {containerSize.width > 0 && containerSize.height > 0 && (
           <Tree
-            key={refreshKey}
             width={containerSize.width}
             height={containerSize.height}
             onNodeClick={onNodeClick}
@@ -92,7 +87,6 @@ export default function TreeViewPage() {
           zIndex: 10,
         }}
       >
-        <button onClick={handleRefresh}>Refresh</button>
         <TreeFilter />
       </div>
     </div>

@@ -16,6 +16,12 @@ const uiSlice = createSlice({
       width: getInitialSidebarWidth(),
       isResizing: false,
     },
+    treeFilter: {
+      searchTerm: "",
+      selectedRoots: [],
+      showRootsWithChildren: true,
+      showCompletedTasks: false,
+    },
   },
   reducers: {
     toggleSidebar: (state) => {
@@ -37,6 +43,23 @@ const uiSlice = createSlice({
     setIsResizing: (state, action) => {
       state.sidebar.isResizing = action.payload;
     },
+    setTreeFilter: (state, action) => {
+      const newFilter = {};
+      for (const [key, value] of Object.entries(action.payload)) {
+        if (
+          typeof value === "string" ||
+          typeof value === "boolean" ||
+          Array.isArray(value)
+        ) {
+          newFilter[key] = value;
+        } else {
+          console.warn(
+            `Invalid value type for treeFilter.${key}. Ignoring this field.`
+          );
+        }
+      }
+      state.treeFilter = { ...state.treeFilter, ...newFilter };
+    },
   },
 });
 
@@ -45,5 +68,6 @@ export const {
   setSidebarContent,
   setSidebarWidth,
   setIsResizing,
+  setTreeFilter,
 } = uiSlice.actions;
 export default uiSlice.reducer;

@@ -2,19 +2,15 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Tree from "../../../components/Tree";
+import TreeFilter from "@/components/TreeFilter";
 import { getTaskByPath, setSelectedTask } from "@/redux/reducers/taskSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 export default function TreeViewPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
-
-  const handleRefresh = useCallback(() => {
-    setRefreshKey((prevKey) => prevKey + 1);
-  }, []);
 
   useEffect(() => {
     const updateSize = () => {
@@ -59,33 +55,39 @@ export default function TreeViewPage() {
       }}
     >
       <div
-        style={{
-          padding: "20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <h1>Tree Structure with D3 and React</h1>
-        <button onClick={handleRefresh}>Refresh</button>
-      </div>
-      <div
         ref={containerRef}
         style={{
-          flexGrow: 1,
-          position: "relative",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           overflow: "hidden",
         }}
         onContextMenu={handleContextMenu}
       >
         {containerSize.width > 0 && containerSize.height > 0 && (
           <Tree
-            key={refreshKey}
             width={containerSize.width}
             height={containerSize.height}
             onNodeClick={onNodeClick}
           />
         )}
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: "20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          zIndex: 10,
+        }}
+      >
+        <TreeFilter />
       </div>
     </div>
   );

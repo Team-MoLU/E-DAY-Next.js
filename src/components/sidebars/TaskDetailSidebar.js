@@ -19,8 +19,7 @@ export default function TaskDetailSidebar() {
     const { name, value } = e.target;
     if (name === "name") {
       setName(value);
-    }
-    if (name === "memo") {
+    } else if (name === "memo") {
       setMemo(value); // memo 필드의 입력 값을 memo 상태에 업데이트
     }
   };
@@ -90,6 +89,15 @@ export default function TaskDetailSidebar() {
 
   if (!selectedTask) {
     return <div>선택된 태스크가 없습니다.</div>;
+  }
+
+  if (selectedTask.name === "root") {
+    return (
+      <div>
+        <label>Name:</label>
+        <input type="text" name="name" value={name} />
+      </div>
+    );
   }
 
   return (

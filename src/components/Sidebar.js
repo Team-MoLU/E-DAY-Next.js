@@ -7,7 +7,7 @@ import {
   resize,
 } from "@/redux/actions/uiAction";
 import TaskDetailSidebar from "./sidebars/TaskDetailSidebar";
-import TaskDetailReadOnlySidebar from "./sidebars/TaskDetailReadOnlySidebar";
+import ArchiveDetailSidebar from "./sidebars/ArchiveDetailSidebar";
 import { Explore } from "./Explore";
 
 const Sidebar = () => {
@@ -53,7 +53,7 @@ const Sidebar = () => {
       case "taskDetail":
         return <TaskDetailSidebar />;
       case "taskDetailReadOnly":
-        return <TaskDetailReadOnlySidebar />;
+        return <ArchiveDetailSidebar />;
       case "explore":
         return <Explore />;
       default:

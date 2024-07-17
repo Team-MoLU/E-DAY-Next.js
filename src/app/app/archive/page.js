@@ -4,31 +4,26 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   deleteTask,
   getTaskByPath,
-  setSelectedTask,
-  updateTask,
+  setSelectedArchiveTask,
   moveTask,
 } from "@/redux/reducers/taskSlice";
 import { setSidebarContent, toggleSidebar } from "@/redux/reducers/uiSlice";
 import Sidebar from "../../../components/Sidebar";
-import { v4 as uuidv4 } from "uuid";
 import "react-datepicker/dist/react-datepicker.css";
 import { DraggableTask } from "../../../components/DraggableTask";
 import { useDrop } from "react-dnd";
-import { useRouter } from "next/navigation";
 
 export default function ArchivePage() {
   // task data 관련
   const data = useSelector((state) => state.tasks.archive);
-  const selectedTask = useSelector((state) => state.tasks.selectedTask);
+  const selectedArchive = useSelector((state) => state.tasks.selectedArchive);
   const dispatch = useDispatch();
-  const router = useRouter();
   const [currentTask, setCurrentTask] = useState(
-    selectedTask === null ? data : selectedTask
+    selectedArchive === null ? data : selectedArchive
   );
   const [path, setPath] = useState(
-    selectedTask === null ? [] : selectedTask.path
+    selectedArchive === null ? [] : selectedArchive.path
   );
-  const [newTaskName, setNewTaskName] = useState("");
 
   // data 변경 시, currentTask refresh
   useEffect(() => {
@@ -37,13 +32,8 @@ export default function ArchivePage() {
 
   // path 변경 시, currentTask refresh
   useEffect(() => {
-    dispatch(setSelectedTask({ ...currentTask, path: path }));
+    dispatch(setSelectedArchiveTask({ ...currentTask, path: path }));
   }, [path, currentTask, dispatch]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentTask({ ...currentTask, [name]: value });
-  };
 
   /**
    * 현재 task를 삭제(cascade)하고, 부모 task로 이동하는 함수
@@ -171,7 +161,7 @@ export default function ArchivePage() {
    * @param {*} task
    */
   const handleSearchedTaskDoubleClick = (task) => {
-    dispatch(setSelectedTask(task));
+    dispatch(setSelectedArchiveTask(task));
     let { path, ...newCurrentTask } = task;
 
     setCurrentTask(newCurrentTask);
@@ -250,7 +240,7 @@ export default function ArchivePage() {
               {currentTask.name !== "root" && (
                 <button
                   onClick={() => {
-                    dispatch(setSelectedTask({ ...currentTask, path }));
+                    dispatch(setSelectedArchiveTask({ ...currentTask, path }));
                     dispatch(setSidebarContent("taskDetailReadOnly"));
                     // side view가 꺼져있으면 켜기
                     if (sidebarIsOpen === false) {

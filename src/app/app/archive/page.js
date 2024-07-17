@@ -251,13 +251,13 @@ export default function ArchivePage() {
                 <button
                   onClick={() => {
                     dispatch(setSelectedTask({ ...currentTask, path }));
-                    dispatch(setSidebarContent("taskDetail"));
+                    dispatch(setSidebarContent("taskDetailReadOnly"));
                     // side view가 꺼져있으면 켜기
                     if (sidebarIsOpen === false) {
                       dispatch(toggleSidebar());
                     }
                     // side view 가 켜져있고, 이미 taskDetail 이면, 끄기
-                    else if (sidebarActiveContent === "taskDetail") {
+                    else if (sidebarActiveContent === "taskDetailReadOnly") {
                       dispatch(toggleSidebar());
                     }
                   }}
@@ -266,7 +266,7 @@ export default function ArchivePage() {
                 </button>
               )}
               {/* 삭제 버튼 */}
-              {currentTask.name !== "root" && (
+              {currentTask.name !== "archive" && (
                 <button onClick={handleDeleteTask}>삭제</button>
               )}
               <div>

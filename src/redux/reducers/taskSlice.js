@@ -142,11 +142,11 @@ const initialState = {
       {
         id: "18f5f8e7-120e-49c8-a2f8-78636c1cfcc6",
         name: "Child 1(archive)",
-        memo: "",
-        startDate: "",
-        endDate: "",
-        priority: 0,
-        check: false,
+        memo: "this item has been archived.",
+        startDate: "2024-02-07",
+        endDate: "2024-07-07",
+        priority: 2,
+        check: true,
         children: [
           {
             id: "6d49aef0-1448-495c-90a5-2ac9a0c264b8",

@@ -74,7 +74,7 @@ const initialState = {
     children: [
       {
         id: "c2e10d32-24a1-4966-a2f1-7d6a652a9b69",
-        name: "Child 1",
+        name: "Child 1(deleted)",
         memo: "",
         startDate: "",
         endDate: "",
@@ -83,7 +83,7 @@ const initialState = {
         children: [
           {
             id: "5d482c5b-6e26-4316-a593-1a232d0e2181",
-            name: "Grandchild 1",
+            name: "Grandchild 1(deleted)",
             memo: "",
             startDate: "",
             endDate: "",
@@ -93,7 +93,7 @@ const initialState = {
           },
           {
             id: "8f382b6f-813d-40b1-b8bf-5a1f132eeb05",
-            name: "Grandchild 2",
+            name: "Grandchild 2(deleted)",
             memo: "",
             startDate: "",
             endDate: "",
@@ -105,7 +105,7 @@ const initialState = {
       },
       {
         id: "7e75a77b-5e1d-4a0e-bdcd-87c55aa6d8a3",
-        name: "Child 2",
+        name: "Child 2(deleted)",
         memo: "",
         startDate: "",
         endDate: "",
@@ -114,7 +114,7 @@ const initialState = {
         children: [
           {
             id: "b69a79d5-d204-48d1-8d2b-05e2e7a7c0a5",
-            name: "Grandchild 3",
+            name: "Grandchild 3(deleted)",
             memo: "",
             startDate: "",
             endDate: "",
@@ -124,7 +124,7 @@ const initialState = {
           },
           {
             id: "7d91fa3c-6154-4b4f-85c4-2ef223c80c79",
-            name: "Grandchild 4",
+            name: "Grandchild 4(deleted)",
             memo: "",
             startDate: "",
             endDate: "",
@@ -141,7 +141,7 @@ const initialState = {
     children: [
       {
         id: "18f5f8e7-120e-49c8-a2f8-78636c1cfcc6",
-        name: "Child 1",
+        name: "Child 1(archive)",
         memo: "",
         startDate: "",
         endDate: "",
@@ -150,7 +150,7 @@ const initialState = {
         children: [
           {
             id: "6d49aef0-1448-495c-90a5-2ac9a0c264b8",
-            name: "Grandchild 1",
+            name: "Grandchild 1(archive)",
             memo: "",
             startDate: "",
             endDate: "",
@@ -160,7 +160,7 @@ const initialState = {
           },
           {
             id: "75e7be5b-4bc4-42b1-ae1e-56881e531839",
-            name: "Grandchild 2",
+            name: "Grandchild 2(archive)",
             memo: "",
             startDate: "",
             endDate: "",
@@ -172,7 +172,7 @@ const initialState = {
       },
       {
         id: "1d2f15f0-7368-4a90-83cc-9674326a4a56",
-        name: "Child 2",
+        name: "Child 2(archive)",
         memo: "",
         startDate: "",
         endDate: "",
@@ -181,7 +181,7 @@ const initialState = {
         children: [
           {
             id: "b8a0e2a8-7bc0-46b0-b724-04e6413a16a3",
-            name: "Grandchild 3",
+            name: "Grandchild 3(archive)",
             memo: "",
             startDate: "",
             endDate: "",
@@ -191,7 +191,7 @@ const initialState = {
           },
           {
             id: "6d75a1c1-d7c7-4a68-9a6c-7c6831045e4e",
-            name: "Grandchild 4",
+            name: "Grandchild 4(archive)",
             memo: "",
             startDate: "",
             endDate: "",

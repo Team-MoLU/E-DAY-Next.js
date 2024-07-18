@@ -277,11 +277,16 @@ const taskSlice = createSlice({
   initialState: {
     ...initialState,
     selectedTask: null,
+    exploredTask: null,
   },
   reducers: {
     // (Tree에서) task 선택 시 선택된 task 저장
     setSelectedTask: (state, action) => {
       state.selectedTask = action.payload;
+    },
+    // (Explore에서) task 선택 시 선택된 task 저장
+    setExploredTask: (state, action) => {
+      state.exploredTask = action.payload;
     },
     // 새로운 task 추가
     addTask: (state, action) => {
@@ -350,6 +355,7 @@ const taskSlice = createSlice({
 
 export const {
   setSelectedTask,
+  setExploredTask,
   handleNodeClick,
   addTask,
   updateTask,

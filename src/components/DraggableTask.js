@@ -3,6 +3,7 @@ import common from "@/lib/common/common_fn";
 import { useDrag, useDrop } from "react-dnd";
 
 export const DraggableTask = ({
+  type,
   task,
   onClick,
   onDoubleClick,
@@ -15,7 +16,7 @@ export const DraggableTask = ({
 }) => {
   const [{ isDragging }, drag] = useDrag(
     () => ({
-      type: "TASK",
+      type: type,
       item: { section, path, index, parentPath },
       collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
@@ -26,21 +27,15 @@ export const DraggableTask = ({
 
   const [, drop] = useDrop(
     () => ({
-      accept: "TASK",
+      accept: type,
       hover: (item) => {
-        console.log("drop on DraggableTask");
-        // item.parentPath 와 parentPath 가 다르면
-        // 한 리스트 내의 이동
-        if (common.arraysEqual(item.parentPath, parentPath)) {
-          console.log("arraysEqual(item.parentPath, parentPath)");
-          if (item.index !== index) {
-            orderTask(parentPath, item.index, index);
-            item.index = index;
-          }
+        if (item.index !== index) {
+          orderTask(item.index, index);
+          item.index = index;
         }
       },
     }),
-    [index, parentPath]
+    [index, parentPath, orderTask]
   );
 
   return (

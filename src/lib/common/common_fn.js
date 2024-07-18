@@ -222,16 +222,35 @@ const common = {
     return null;
   },
 
-  // 노드의 경로를 구하는 함수
-  findRouteById: function findRouteById(nodeId, tree = data, path = []) {
+  // 노드의 id 경로를 구하는 함수
+  findIdPathById: function findIdPathById(nodeId, tree = data, path = []) {
     if (tree.id === nodeId) {
       return [...path, tree.id];
     }
     if (tree.children) {
       for (let i = 0; i < tree.children.length; i++) {
-        const result = findRouteById(nodeId, tree.children[i], [
+        const result = findIdPathById(nodeId, tree.children[i], [
           ...path,
           tree.id,
+        ]);
+        if (result) {
+          return result;
+        }
+      }
+    }
+    return null;
+  },
+
+  // 경로의 {id, name} 의 배열을 반환하는 함수
+  findRouteById: function findRouteById(nodeId, tree = data, path = []) {
+    if (tree.id === nodeId) {
+      return [...path, { id: tree.id, name: tree.name }];
+    }
+    if (tree.children) {
+      for (let i = 0; i < tree.children.length; i++) {
+        const result = findRouteById(nodeId, tree.children[i], [
+          ...path,
+          { id: tree.id, name: tree.name },
         ]);
         if (result) {
           return result;

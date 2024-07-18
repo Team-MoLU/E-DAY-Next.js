@@ -139,7 +139,7 @@ export default function HomePage() {
 
   const [, drop] = useDrop(
     () => ({
-      accept: "TASK",
+      accept: "ExploreItem",
       drop: handleDrop,
     }),
     [handleDrop]
@@ -193,6 +193,7 @@ export default function HomePage() {
             <ul>
               {todayTaskList.map((task, index) => (
                 <li
+                  key={"todayTask" + index}
                   className="task-item"
                   onDoubleClick={() => {
                     handleTodayTaskDoubleClick(task);

@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   root: {
+    id: "root",
     name: "root",
     children: [
       {
@@ -70,6 +71,7 @@ const initialState = {
     ],
   },
   trash: {
+    id: "trash",
     name: "trash",
     children: [
       {
@@ -137,6 +139,7 @@ const initialState = {
     ],
   },
   archive: {
+    id: "archive",
     name: "archive",
     children: [
       {
@@ -262,6 +265,13 @@ const deleteTaskAtPath = (state, path) => {
   }
 };
 
+const orderChildren = (children, fromIndex, toIndex) => {
+  const updatedChildren = [...children];
+  const [movedChild] = updatedChildren.splice(fromIndex, 1);
+  updatedChildren.splice(toIndex, 0, movedChild);
+  return updatedChildren;
+};
+
 const taskSlice = createSlice({
   name: "tasks",
   initialState: {
@@ -323,6 +333,16 @@ const taskSlice = createSlice({
         }
       }
     },
+    // task의 하위 task간의 ordering하는 함수
+    orderTask: (state, action) => {
+      const { section, path, fromIndex, toIndex } = action.payload;
+      if (state[section]) {
+        const task = getTaskByPath(state[section], path);
+        if (task && task.children) {
+          task.children = orderChildren(task.children, fromIndex, toIndex);
+        }
+      }
+    },
     // Todo: archiveTask
     // Todo: unarchiveTask
   },
@@ -337,5 +357,6 @@ export const {
   dropTask,
   restoreTask,
   moveTask,
+  orderTask,
 } = taskSlice.actions;
 export default taskSlice.reducer;

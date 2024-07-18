@@ -5,9 +5,11 @@ import {
   getTaskByPath,
   updateTask,
   moveTask,
+  orderTask,
 } from "@/redux/reducers/taskSlice";
 import { useDrop } from "react-dnd";
 import { DraggableTask } from "./DraggableTask";
+import common from "@/lib/common/common_fn";
 
 export const Explore = () => {
   // task data 관련
@@ -15,6 +17,11 @@ export const Explore = () => {
   const dispatch = useDispatch();
   const [currentTask, setCurrentTask] = useState(data);
   const [path, setPath] = useState([]);
+
+  // data 변경 시, currentTask refresh
+  useEffect(() => {
+    console.log(currentTask);
+  }, [data]);
 
   /**
    * subtask 를 더블클릭했을 때, 해당 task의 하위로 이동하는 함수
@@ -89,41 +96,58 @@ export const Explore = () => {
   // Drag and Drop 관련
   const handleDrop = useCallback(
     (item) => {
-      if (item.section === data.name) {
-        // 경로가 동일한 경우
-        if (JSON.stringify(item.path) === JSON.stringify(path)) {
-          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
-          return;
+      console.log("handleDrop from Explore");
+      console.log(item.parentPath);
+      console.log(item.path);
+      console.log(path);
+      if (common.arraysEqual(item.parentPath, path) === false) {
+        if (item.section === data.name) {
+          // 경로가 동일한 경우
+          if (JSON.stringify(item.path) === JSON.stringify(path)) {
+            alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+            return;
+          }
+          // item.path가 path의 상위 경로인 경우 (path가 item.path의 하위 경로인 경우)
+          if (
+            path.length > item.path.length &&
+            JSON.stringify(item.path) ===
+              JSON.stringify(path.slice(0, item.path.length))
+          ) {
+            alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+            return;
+          }
         }
-        // item.path가 path의 상위 경로인 경우 (path가 item.path의 하위 경로인 경우)
-        if (
-          path.length > item.path.length &&
-          JSON.stringify(item.path) ===
-            JSON.stringify(path.slice(0, item.path.length))
-        ) {
-          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
-          return;
-        }
+        dispatch(
+          moveTask({
+            fromSection: item.section,
+            fromPath: item.path,
+            toSection: data.name,
+            toPath: path,
+          })
+        );
       }
-      dispatch(
-        moveTask({
-          fromSection: item.section,
-          fromPath: item.path,
-          toSection: data.name,
-          toPath: path,
-        })
-      );
     },
     [path, data.name]
   ); // path와 data.name을 의존성 배열에 추가
 
-  const [, drop] = useDrop(
+  const [, dropToPage] = useDrop(
     () => ({
       accept: "TASK",
       drop: handleDrop,
     }),
     [handleDrop]
   ); // handleDrop을 의존성 배열에 추가
+
+  const handleOrderTask = (parentPath, fromIndex, toIndex) => {
+    dispatch(
+      orderTask({
+        section: data.name,
+        path: parentPath,
+        fromIndex: fromIndex,
+        toIndex: toIndex,
+      })
+    );
+  };
 
   // 검색 관련
   const [searchString, setSearchString] = useState("");
@@ -205,7 +229,7 @@ export const Explore = () => {
   };
 
   return (
-    <div className="explore" ref={drop}>
+    <div className="explore" ref={dropToPage}>
       <h1>탐색</h1>
       <label className="block mb-2 font-semibold">검색</label>
       {/* 검색창 */}
@@ -300,12 +324,15 @@ export const Explore = () => {
                 task={task}
                 section={data.name}
                 path={[...path, index]}
+                parentPath={path}
                 onDoubleClick={() => {
                   handleSubtaskDoubleClick(task, [...path, index]);
                 }}
                 onCheckChange={(e) => {
                   toggleSubTaskCheck(index);
                 }}
+                index={index} // 현재 인덱스 전달
+                orderTask={handleOrderTask} // orderTask 함수 전달
               />
             ))}
           </ul>

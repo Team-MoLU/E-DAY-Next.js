@@ -1,5 +1,6 @@
 "use client";
-import { useDrag } from "react-dnd";
+import common from "@/lib/common/common_fn";
+import { useDrag, useDrop } from "react-dnd";
 
 export const DraggableTask = ({
   task,
@@ -8,21 +9,43 @@ export const DraggableTask = ({
   onCheckChange,
   section,
   path,
+  parentPath,
+  index,
+  orderTask,
 }) => {
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: "TASK",
-      item: () => ({ task, section, path }), // 함수로 변경
+      item: { section, path, index, parentPath },
       collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
       }),
     }),
-    [task, section, path]
-  ); // 의존성 배열 추가
+    [section, path, index, parentPath]
+  );
+
+  const [, drop] = useDrop(
+    () => ({
+      accept: "TASK",
+      hover: (item) => {
+        console.log("drop on DraggableTask");
+        // item.parentPath 와 parentPath 가 다르면
+        // 한 리스트 내의 이동
+        if (common.arraysEqual(item.parentPath, parentPath)) {
+          console.log("arraysEqual(item.parentPath, parentPath)");
+          if (item.index !== index) {
+            orderTask(parentPath, item.index, index);
+            item.index = index;
+          }
+        }
+      },
+    }),
+    [index, parentPath]
+  );
 
   return (
     <li
-      ref={drag}
+      ref={(node) => drag(drop(node))}
       className="task-item"
       style={{ opacity: isDragging ? 0.5 : 1 }}
       onClick={onClick}

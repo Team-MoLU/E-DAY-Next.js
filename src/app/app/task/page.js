@@ -8,6 +8,7 @@ import {
   setSelectedTask,
   updateTask,
   moveTask,
+  orderTask,
 } from "@/redux/reducers/taskSlice";
 import { setSidebarContent, toggleSidebar } from "@/redux/reducers/uiSlice";
 import Sidebar from "../../../components/Sidebar";
@@ -16,6 +17,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { DraggableTask } from "../../../components/DraggableTask";
 import { useDrop } from "react-dnd";
 import { useRouter } from "next/navigation";
+import common from "@/lib/common/common_fn";
 
 export default function TaskPage() {
   // task data 관련
@@ -34,6 +36,7 @@ export default function TaskPage() {
   // data 변경 시, currentTask refresh
   useEffect(() => {
     setCurrentTask(getTaskByPath(data, path));
+    console.log("TaskPage: data 변경 시, currentTask refresh");
   }, [data]);
 
   // path 변경 시, currentTask refresh
@@ -164,41 +167,58 @@ export default function TaskPage() {
   // Drag and Drop 관련
   const handleDrop = useCallback(
     (item) => {
-      if (item.section === data.name) {
-        // 경로가 동일한 경우
-        if (JSON.stringify(item.path) === JSON.stringify(path)) {
-          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
-          return;
+      console.log("handleDrop from TaskPage");
+      console.log(item.parentPath);
+      console.log(item.path);
+      console.log(path);
+      if (common.arraysEqual(item.parentPath, path) === false) {
+        if (item.section === data.name) {
+          // 경로가 동일한 경우
+          if (JSON.stringify(item.path) === JSON.stringify(path)) {
+            alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+            return;
+          }
+          // item.path가 path의 상위 경로인 경우 (path가 item.path의 하위 경로인 경우)
+          if (
+            path.length > item.path.length &&
+            JSON.stringify(item.path) ===
+              JSON.stringify(path.slice(0, item.path.length))
+          ) {
+            alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+            return;
+          }
         }
-        // item.path가 path의 상위 경로인 경우 (path가 item.path의 하위 경로인 경우)
-        if (
-          path.length > item.path.length &&
-          JSON.stringify(item.path) ===
-            JSON.stringify(path.slice(0, item.path.length))
-        ) {
-          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
-          return;
-        }
+        dispatch(
+          moveTask({
+            fromSection: item.section,
+            fromPath: item.path,
+            toSection: data.name,
+            toPath: path,
+          })
+        );
       }
-      dispatch(
-        moveTask({
-          fromSection: item.section,
-          fromPath: item.path,
-          toSection: data.name,
-          toPath: path,
-        })
-      );
     },
-    [path, data.name, dispatch]
+    [path, data.name]
   ); // path와 data.name을 의존성 배열에 추가
 
-  const [, drop] = useDrop(
+  const [, dropToPage] = useDrop(
     () => ({
       accept: "TASK",
       drop: handleDrop,
     }),
     [handleDrop]
   ); // handleDrop을 의존성 배열에 추가
+
+  const handleOrderTask = (parentPath, fromIndex, toIndex) => {
+    dispatch(
+      orderTask({
+        section: data.name,
+        path: parentPath,
+        fromIndex: fromIndex,
+        toIndex: toIndex,
+      })
+    );
+  };
 
   // 검색 관련
   const [searchString, setSearchString] = useState("");
@@ -281,8 +301,9 @@ export default function TaskPage() {
 
   // view return
   return (
-    <div className="task-page" ref={drop}>
+    <div className="task-page">
       <div
+        ref={dropToPage}
         className="main-view"
         style={{
           width: sidebarIsOpen ? `calc(100% - ${sidebarWidth}px)` : "100%",
@@ -446,12 +467,15 @@ export default function TaskPage() {
                       task={task}
                       section={data.name}
                       path={[...path, index]}
+                      parentPath={path}
                       onDoubleClick={() => {
                         handleSubtaskDoubleClick(task, [...path, index]);
                       }}
                       onCheckChange={(e) => {
                         toggleSubTaskCheck(index);
                       }}
+                      index={index} // 현재 인덱스 전달
+                      orderTask={handleOrderTask} // orderTask 함수 전달
                     />
                   ))}
                 </ul>

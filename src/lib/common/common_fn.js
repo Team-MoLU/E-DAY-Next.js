@@ -200,6 +200,46 @@ const common = {
       return color;
     }
   },
+
+  // 두 array의 값을 비교하여 일치하는지 확인하는 함수
+  arraysEqual: function arraysEqual(arr1, arr2) {
+    return JSON.stringify(arr1) === JSON.stringify(arr2);
+  },
+
+  // 노드의 경로를 구하는 함수
+  findNodePathById: function findNodePathById(nodeId, tree = data, path = []) {
+    if (tree.id === nodeId) {
+      return path;
+    }
+    if (tree.children) {
+      for (let i = 0; i < tree.children.length; i++) {
+        const result = findNodePathById(nodeId, tree.children[i], [...path, i]);
+        if (result) {
+          return result;
+        }
+      }
+    }
+    return null;
+  },
+
+  // 노드의 경로를 구하는 함수
+  findRouteById: function findRouteById(nodeId, tree = data, path = []) {
+    if (tree.id === nodeId) {
+      return [...path, tree.id];
+    }
+    if (tree.children) {
+      for (let i = 0; i < tree.children.length; i++) {
+        const result = findRouteById(nodeId, tree.children[i], [
+          ...path,
+          tree.id,
+        ]);
+        if (result) {
+          return result;
+        }
+      }
+    }
+    return null;
+  },
 };
 
 export default common;

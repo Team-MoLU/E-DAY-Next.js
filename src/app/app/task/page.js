@@ -41,6 +41,11 @@ export default function TaskPage() {
     dispatch(setSelectedTask({ ...currentTask, path: path }));
   }, [path]);
 
+  // 페이지에 맞는 사이드바 내용으로 설정
+  useEffect(() => {
+    dispatch(setSidebarContent("taskDetail"));
+  }, [dispatch]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCurrentTask({ ...currentTask, [name]: value });

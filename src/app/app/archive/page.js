@@ -35,6 +35,11 @@ export default function ArchivePage() {
     dispatch(setSelectedArchiveTask({ ...currentTask, path: path }));
   }, [path, currentTask, dispatch]);
 
+  // 페이지에 맞는 사이드바 내용으로 설정
+  useEffect(() => {
+    dispatch(setSidebarContent("taskDetailReadOnly"));
+  }, [dispatch]);
+
   /**
    * 현재 task를 삭제(cascade)하고, 부모 task로 이동하는 함수
    */

@@ -8,6 +8,7 @@ import {
   setSelectedTask,
   updateTask,
   moveTask,
+  archiveTask,
 } from "@/redux/reducers/taskSlice";
 import { setSidebarContent, toggleSidebar } from "@/redux/reducers/uiSlice";
 import Sidebar from "../../../components/Sidebar";
@@ -139,6 +140,22 @@ export default function TaskPage() {
     // dispatch 통해서 현재 node 삭제
     dispatch(
       deleteTask({
+        section: data.name,
+        path: path,
+      })
+    );
+    // currentTask를 부모 Task로 변경
+    const newPath = path.slice(0, -1);
+    setPath(newPath);
+    setCurrentTask(getTaskByPath(data, newPath));
+  };
+
+  /**
+   * 현재 task를 아카이빙하고, 부모 task로 이동하는 함수
+   */
+  const handleArchiveTask = () => {
+    dispatch(
+      archiveTask({
         section: data.name,
         path: path,
       })
@@ -392,6 +409,10 @@ export default function TaskPage() {
               {/* 삭제 버튼 */}
               {currentTask.name !== "root" && (
                 <button onClick={handleDeleteTask}>삭제</button>
+              )}
+              {/* 아카이빙 버튼 */}
+              {currentTask.name !== "root" && (
+                <button onClick={handleArchiveTask}>아카이빙</button>
               )}
               <div>
                 {/* 경로 */}

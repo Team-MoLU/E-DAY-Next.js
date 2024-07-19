@@ -6,6 +6,7 @@ import {
   getTaskByPath,
   setSelectedArchiveTask,
   moveTask,
+  unarchiveTask,
 } from "@/redux/reducers/taskSlice";
 import { setSidebarContent, toggleSidebar } from "@/redux/reducers/uiSlice";
 import Sidebar from "../../../components/Sidebar";
@@ -65,6 +66,22 @@ export default function ArchivePage() {
   const handleSubtaskDoubleClick = (subtask, subtaskPath) => {
     setCurrentTask(subtask);
     setPath(subtaskPath);
+  };
+
+  /**
+   * 현재 task를 archive에서 root 의 하위로 복구하고, 부모 task로 이동하는 함수
+   */
+  const handleUnarchiveTask = () => {
+    // dispatch 통해서 현재 node 삭제
+    dispatch(
+      unarchiveTask({
+        path: path,
+      })
+    );
+    // currentTask를 부모 Task로 변경
+    const newPath = path.slice(0, -1);
+    setPath(newPath);
+    setCurrentTask(getTaskByPath(data, newPath));
   };
 
   // sidebar 관련
@@ -263,6 +280,10 @@ export default function ArchivePage() {
               {/* 삭제 버튼 */}
               {currentTask.name !== "archive" && (
                 <button onClick={handleDeleteTask}>삭제</button>
+              )}
+              {/* 복구 버튼 */}
+              {currentTask.name !== "archive" && (
+                <button onClick={handleUnarchiveTask}>복구</button>
               )}
               <div>
                 {/* 경로 */}

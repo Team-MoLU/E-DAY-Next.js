@@ -328,8 +328,24 @@ const taskSlice = createSlice({
         }
       }
     },
-    // Todo: archiveTask
-    // Todo: unarchiveTask
+    // task 아카이브 이동
+    archiveTask: (state, action) => {
+      const { section, path } = action.payload;
+      if (state[section]) {
+        const taskToArchive = getTaskByPath(state[section], path);
+        addTaskAtPath(state.archive, [], taskToArchive); // Add to archive
+        deleteTaskAtPath(state[section], path); // Delete from original location
+      }
+    },
+    // tash 아카이브 해제
+    unarchiveTask: (state, action) => {
+      const { path } = action.payload;
+      const taskToUnarchive = getTaskByPath(state.archive, path);
+      if (taskToUnarchive) {
+        addTaskAtPath(state.root, [], taskToUnarchive); // Add to root
+        deleteTaskAtPath(state.archive, path); // Remove from archive
+      }
+    },
   },
 });
 
@@ -343,5 +359,7 @@ export const {
   dropTask,
   restoreTask,
   moveTask,
+  archiveTask,
+  unarchiveTask,
 } = taskSlice.actions;
 export default taskSlice.reducer;

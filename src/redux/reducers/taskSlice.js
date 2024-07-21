@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   root: {
+    id: "root",
     name: "root",
     children: [
       {
@@ -70,6 +71,7 @@ const initialState = {
     ],
   },
   trash: {
+    id: "trash",
     name: "trash",
     children: [
       {
@@ -137,6 +139,7 @@ const initialState = {
     ],
   },
   archive: {
+    id: "archive",
     name: "archive",
     children: [
       {
@@ -208,6 +211,9 @@ const initialState = {
 export const getTaskByPath = (tree, path) => {
   let currentNode = tree;
   for (let index of path) {
+    if (!currentNode.children || !currentNode.children[index]) {
+      return null; // Invalid path
+    }
     currentNode = currentNode.children[index];
   }
   return currentNode;
@@ -259,16 +265,28 @@ const deleteTaskAtPath = (state, path) => {
   }
 };
 
+const orderChildren = (children, fromIndex, toIndex) => {
+  const updatedChildren = [...children];
+  const [movedChild] = updatedChildren.splice(fromIndex, 1);
+  updatedChildren.splice(toIndex, 0, movedChild);
+  return updatedChildren;
+};
+
 const taskSlice = createSlice({
   name: "tasks",
   initialState: {
     ...initialState,
     selectedTask: null,
+    exploredTask: null,
   },
   reducers: {
     // (Tree에서) task 선택 시 선택된 task 저장
     setSelectedTask: (state, action) => {
       state.selectedTask = action.payload;
+    },
+    // (Explore에서) task 선택 시 선택된 task 저장
+    setExploredTask: (state, action) => {
+      state.exploredTask = action.payload;
     },
     // 새로운 task 추가
     addTask: (state, action) => {
@@ -300,8 +318,36 @@ const taskSlice = createSlice({
         deleteTaskAtPath(state[section], path);
       }
     },
-    // Todo: moveTask
-    // Todo: restoreTask : 휴지통에서 복구
+    // trash에서 task를 복구
+    restoreTask: (state, action) => {
+      const { path } = action.payload;
+      const taskToRestore = getTaskByPath(state.trash, path);
+      if (taskToRestore) {
+        addTaskAtPath(state.root, [], taskToRestore); // Add to root
+        deleteTaskAtPath(state.trash, path); // Remove from trash
+      }
+    },
+    // task 이동
+    moveTask: (state, action) => {
+      const { fromSection, fromPath, toSection, toPath } = action.payload;
+      if (state[fromSection] && state[toSection]) {
+        const taskToMove = getTaskByPath(state[fromSection], fromPath);
+        if (taskToMove) {
+          addTaskAtPath(state[toSection], toPath, taskToMove); // Add to new location
+          deleteTaskAtPath(state[fromSection], fromPath); // Delete from original location
+        }
+      }
+    },
+    // task의 하위 task간의 ordering하는 함수
+    orderTask: (state, action) => {
+      const { section, path, fromIndex, toIndex } = action.payload;
+      if (state[section]) {
+        const task = getTaskByPath(state[section], path);
+        if (task && task.children) {
+          task.children = orderChildren(task.children, fromIndex, toIndex);
+        }
+      }
+    },
     // Todo: archiveTask
     // Todo: unarchiveTask
   },
@@ -309,10 +355,14 @@ const taskSlice = createSlice({
 
 export const {
   setSelectedTask,
+  setExploredTask,
   handleNodeClick,
   addTask,
   updateTask,
   deleteTask,
   dropTask,
+  restoreTask,
+  moveTask,
+  orderTask,
 } = taskSlice.actions;
 export default taskSlice.reducer;

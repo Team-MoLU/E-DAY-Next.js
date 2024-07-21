@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { Provider } from "react-redux";
 import store from "../../redux/store";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 export default function AppLayout({ children }) {
   return (
@@ -9,7 +11,6 @@ export default function AppLayout({ children }) {
       <div className="sidebar">
         <h1>E-day</h1>
         <Link href="/app">홈</Link>
-        <Link href="/app/tree-view">트리뷰</Link>
         <Link href="/app/calendar">캘린더</Link>
         <Link href="/app/retrospect">회고록</Link>
         <Link href="/app/achievement">달성도</Link>
@@ -18,7 +19,9 @@ export default function AppLayout({ children }) {
         <Link href="/app/trash">trash</Link>
       </div>
       <Provider store={store}>
-        <div className="main-content">{children}</div>
+        <DndProvider backend={HTML5Backend}>
+          <div className="main-content">{children}</div>
+        </DndProvider>
       </Provider>
     </>
   );

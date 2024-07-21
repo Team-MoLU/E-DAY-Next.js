@@ -1,110 +1,111 @@
-import React, {
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import React, { useRef, useEffect, useCallback, useMemo } from "react";
 import * as d3 from "d3";
-import { useSelector, useDispatch } from "react-redux";
-import { updateTask } from "../redux/reducers/taskSlice";
-
-// 컨텍스트 메뉴 컴포넌트
-const ContextMenu = React.memo(({ x, y, node, onClose }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const menuRef = useRef(null);
-
-  // 컴포넌트 마운트 시 메뉴를 보이게 함
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
-  // 외부 클릭 감지 및 메뉴 닫기
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsVisible(false);
-        setTimeout(onClose, 200); // 페이드아웃 애니메이션 완료 후 메뉴 닫기
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
-
-  // 메뉴 옵션 클릭 처리
-  const handleOptionClick = (option) => {
-    console.log(`${option} clicked`, node);
-    setIsVisible(false);
-    setTimeout(onClose, 200);
-  };
-
-  // 메뉴 옵션 렌더링
-  const renderMenuOptions = () => {
-    return ["생성", "삭제", "이동"].map((option) => (
-      <div
-        key={option}
-        onClick={() => handleOptionClick(option)}
-        style={{
-          padding: "8px 16px",
-          cursor: "pointer",
-          transition: "background-color 150ms ease-in-out",
-        }}
-        onMouseEnter={(e) => (e.target.style.backgroundColor = "#f0f0f0")}
-        onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
-      >
-        {option}
-      </div>
-    ));
-  };
-
-  return (
-    <div
-      ref={menuRef}
-      className="context-menu"
-      style={{
-        position: "absolute",
-        top: y,
-        left: x,
-        background: "white",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        padding: "8px 0",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-        zIndex: 1000,
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible
-          ? "scale(1) translateY(0)"
-          : "scale(0.95) translateY(-20px)",
-        transition: "opacity 200ms ease-in-out, transform 200ms ease-in-out",
-      }}
-    >
-      <div
-        style={{
-          padding: "8px 16px",
-          fontWeight: "bold",
-        }}
-      >
-        {node.data.name}
-      </div>
-      {renderMenuOptions()}
-    </div>
-  );
-});
-
-ContextMenu.displayName = "ContextMenu";
+import { useSelector } from "react-redux";
+import common from "@/lib/common/common_fn";
 
 // 트리 컴포넌트
 const Tree = React.memo(({ width, height, onNodeClick }) => {
   const data = useSelector((state) => state.tasks.root);
-  const dispatch = useDispatch();
+  const filter = useSelector((state) => state.ui.treeFilter);
   const svgRef = useRef(null);
   const zoomRef = useRef(null);
   const scaleRef = useRef(d3.zoomIdentity);
   const simulationRef = useRef(null);
-  const [contextMenu, setContextMenu] = useState(null);
 
   const memoizedData = useMemo(() => data.children || [], [data]);
+
+  const filteredData = useMemo(() => {
+    if (filter.selectedRoots.length === 0) {
+      return memoizedData;
+    }
+    return memoizedData.filter((root) =>
+      filter.selectedRoots.includes(root.id)
+    );
+  }, [memoizedData, filter.selectedRoots]);
+
+  const filterNode = useCallback(
+    (node, isRoot = false) => {
+      // 검색어 필터링
+      if (
+        filter.searchTerm &&
+        !node.name
+          .toLowerCase()
+          .replace(/\s+/g, "")
+          .includes(filter.searchTerm.toLowerCase().replace(/\s+/g, ""))
+      ) {
+        return false;
+      }
+
+      // 선택된 루트 필터링
+      if (
+        filter.selectedRoots.length > 0 &&
+        isRoot &&
+        !filter.selectedRoots.includes(node.id)
+      ) {
+        return false;
+      }
+
+      // 루트 노드 필터링
+      if (isRoot) {
+        if (
+          filter.showRootsWithChildren &&
+          (!node.children || node.children.length === 0)
+        ) {
+          return false;
+        }
+      }
+
+      // 완료된 할 일 필터링
+      if (
+        !filter.showCompletedTasks &&
+        node.check &&
+        allChildrenCompleted(node)
+      ) {
+        return false;
+      }
+
+      return true;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filter]
+  );
+
+  const allChildrenCompleted = useCallback((node) => {
+    if (!node.children || node.children.length === 0) {
+      return true;
+    }
+    return node.children.every(
+      (child) => child.check && allChildrenCompleted(child)
+    );
+  }, []);
+
+  const processedData = useMemo(() => {
+    const processTree = (node, isRoot = false) => {
+      if (!node) return null;
+
+      const nodeMatches = filterNode(node, isRoot);
+      let filteredChildren = [];
+
+      if (node.children) {
+        filteredChildren = node.children
+          .map((child) => processTree(child, false))
+          .filter(Boolean);
+      }
+
+      if (nodeMatches || filteredChildren.length > 0) {
+        return {
+          ...node,
+          children: filteredChildren,
+          _matches:
+            nodeMatches || filteredChildren.some((child) => child._matches),
+        };
+      }
+
+      return null;
+    };
+
+    return filteredData.map((root) => processTree(root, true)).filter(Boolean);
+  }, [filteredData, filterNode]);
 
   // 노드 드래그 기능 구현
   const drag = useCallback(() => {
@@ -132,44 +133,6 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .on("end", dragended);
   }, []);
 
-  // 노드 우클릭 시 컨텍스트 메뉴 표시
-  const handleNodeContextMenu = useCallback(
-    (event, d) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const [x, y] = d3.pointer(event, svgRef.current);
-      // 새로운 노드를 우클릭할 때 컨텍스트 메뉴 위치 업데이트
-      setContextMenu({
-        x: x + width / 2,
-        y: y + height / 2,
-        node: d,
-      });
-    },
-    [width, height]
-  );
-
-  const handleSvgContextMenu = useCallback((event) => {
-    if (event.target === event.currentTarget) {
-      event.preventDefault();
-      setContextMenu(null);
-    }
-  }, []);
-
-  // 컨텍스트 메뉴 닫기
-  const closeContextMenu = useCallback(() => {
-    setContextMenu(null);
-  }, []);
-
-  // SVG 배경 클릭 시 컨텍스트 메뉴 닫기
-  const handleSvgClick = useCallback(
-    (event) => {
-      if (event.target.tagName === "svg") {
-        closeContextMenu();
-      }
-    },
-    [closeContextMenu]
-  );
-
   // 줌 기능 설정
   const setupZoom = useCallback(() => {
     const svg = d3.select(svgRef.current);
@@ -188,23 +151,23 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
 
   // 트리 렌더링 함수
   const renderTree = useCallback(() => {
-    if (!memoizedData.length) return;
-
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
+
+    if (!processedData.length) {
+      return;
+    }
 
     // SVG 설정
     svg
       .attr("width", "100%")
       .attr("height", "100%")
-      .attr("viewBox", [-width / 2, -height / 2, width, height])
-      .on("contextmenu", handleSvgContextMenu)
-      .on("click", handleSvgClick);
+      .attr("viewBox", [-width / 2, -height / 2, width, height]);
 
     const g = svg.append("g");
 
     // 데이터 계층 구조 생성
-    const roots = memoizedData.map((d) => d3.hierarchy(d));
+    const roots = processedData.map((d) => d3.hierarchy(d));
     const links = roots.flatMap((root) => root.links());
     const nodes = roots.flatMap((root) => root.descendants());
 
@@ -288,32 +251,6 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
 
     simulationRef.current.alpha(0.3).restart();
 
-    // 링크 렌더링
-    const link = g
-      .append("g")
-      .attr("stroke", "#999")
-      .attr("stroke-opacity", 0.6)
-      .selectAll("line")
-      .data(links)
-      .join("line");
-
-    // 랜덤 색상 생성 함수
-    const getRandomColor = () => {
-      const colors = [
-        "red",
-        "green",
-        "yellow",
-        "purple",
-        "orange",
-        "pink",
-        "cyan",
-        "magenta",
-        "blue",
-        "skyblue",
-      ];
-      return colors[Math.floor(Math.random() * colors.length)];
-    };
-
     // 노드의 경로를 구하는 함수
     const findNodePathById = (nodeId, tree = data, path = []) => {
       if (tree.id === nodeId) {
@@ -333,6 +270,43 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       return null;
     };
 
+    // 최상위 노드의 id 반환 함수
+    function findTopLevelParentId(tree, targetId, currentPath = []) {
+      if (tree.id === targetId) {
+        return currentPath.length > 0 ? currentPath[0] : tree.id;
+      }
+
+      if (tree.children && tree.children.length > 0) {
+        for (let i = 0; i < tree.children.length; i++) {
+          const result = findTopLevelParentId(
+            tree.children[i],
+            targetId,
+            currentPath.length === 0 ? [tree.children[i].id] : currentPath
+          );
+          if (result) return result;
+        }
+      }
+
+      return null;
+    }
+
+    // 링크 렌더링
+    const link = g
+      .append("g")
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("stroke", (d) => {
+        // 타겟 노드의 상태를 기준으로 색상 결정
+        if (d.target.data.check) {
+          const topLevelParentId = findTopLevelParentId(data, d.target.data.id);
+          return common.getLighterColorFromUuid(topLevelParentId, 15);
+        } else {
+          return "gray";
+        }
+      });
+
     // 노드 렌더링
     const node = g
       .append("g")
@@ -342,18 +316,47 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .call(drag())
       .on("click", (event, d) => {
         event.stopPropagation();
-        closeContextMenu();
         const path = findNodePathById(d.data.id);
-        onNodeClick(d.data, path);
-      })
-      .on("contextmenu", handleNodeContextMenu);
+        onNodeClick(data, path);
+      });
 
     node
       .append("circle")
-      .attr("fill", (d) => (d.depth === 0 ? getRandomColor() : "gray"))
+      .attr("fill", (d) =>
+        d.depth === 0
+          ? common.getColorFromUuid(d.data.id)
+          : d.data.check
+          ? common.getLighterColorFromUuid(
+              findTopLevelParentId(data, d.data.id),
+              15
+            )
+          : "gray"
+      )
       .attr("stroke-width", 1.5)
       .attr("r", (d) => (d.depth === 0 ? 7 : 5))
       .style("cursor", "pointer");
+
+    // 검색어와 일치하는 노드 강조
+    node
+      .filter(
+        (d) =>
+          filter.searchTerm &&
+          d.data.name
+            .toLowerCase()
+            .replace(/\s+/g, "")
+            .includes(filter.searchTerm.toLowerCase().replace(/\s+/g, "")) &&
+          d.data._matches
+      )
+      .append("circle")
+      .attr("r", (d) => (d.depth === 0 ? 10 : 8))
+      .attr("fill", "none")
+      .attr("stroke", (d) =>
+        common.getLighterColorFromUuid(
+          findTopLevelParentId(data, d.data.id),
+          15
+        )
+      )
+      .attr("stroke-width", 2);
 
     // 레이블 렌더링
     const labels = node
@@ -394,7 +397,6 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     }
     svg.call(zoom);
     svg.on("dblclick.zoom", null);
-    svg.on("contextmenu", handleSvgContextMenu);
 
     // 연결된 노드 강조 함수
     const highlightConnectedNodes = (d, opacity) => {
@@ -464,15 +466,12 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     };
   }, [
     data,
-    memoizedData,
+    filter.searchTerm,
+    processedData,
     width,
     height,
     onNodeClick,
     drag,
-    handleNodeContextMenu,
-    handleSvgContextMenu,
-    closeContextMenu,
-    handleSvgClick,
   ]);
 
   // 줌 초기 설정
@@ -485,20 +484,30 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     renderTree();
   }, [renderTree]);
 
+  // 빈 상태 메시지 컴포넌트
+  const EmptyStateMessage = () => (
+    <div
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        textAlign: "center",
+        color: "#666",
+        fontSize: "1.2rem",
+      }}
+    >
+      할 일이 존재하지 않습니다
+    </div>
+  );
+
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <svg
         ref={svgRef}
         style={{ width: "100%", height: "100%", display: "block" }}
       />
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          node={contextMenu.node}
-          onClose={closeContextMenu}
-        />
-      )}
+      {!processedData.length && <EmptyStateMessage />}
     </div>
   );
 });

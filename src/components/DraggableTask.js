@@ -1,28 +1,46 @@
 "use client";
-import { useDrag } from "react-dnd";
+import common from "@/lib/common/common_fn";
+import { useDrag, useDrop } from "react-dnd";
 
 export const DraggableTask = ({
+  type,
   task,
   onClick,
   onDoubleClick,
   onCheckChange,
   section,
   path,
+  parentPath,
+  index,
+  orderTask,
 }) => {
   const [{ isDragging }, drag] = useDrag(
     () => ({
-      type: "TASK",
-      item: () => ({ task, section, path }), // 함수로 변경
+      type: type,
+      item: { section, path, index, parentPath },
       collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
       }),
     }),
-    [task, section, path]
-  ); // 의존성 배열 추가
+    [section, path, index, parentPath]
+  );
+
+  const [, drop] = useDrop(
+    () => ({
+      accept: type,
+      hover: (item) => {
+        if (item.index !== index) {
+          orderTask(item.index, index);
+          item.index = index;
+        }
+      },
+    }),
+    [index, parentPath, orderTask]
+  );
 
   return (
     <li
-      ref={drag}
+      ref={(node) => drag(drop(node))}
       className="task-item"
       style={{ opacity: isDragging ? 0.5 : 1 }}
       onClick={onClick}

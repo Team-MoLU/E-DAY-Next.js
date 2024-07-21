@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   root: {
+    id: "root",
     name: "root",
     children: [
       {
@@ -70,6 +71,7 @@ const initialState = {
     ],
   },
   trash: {
+    id: "trash",
     name: "trash",
     children: [
       {
@@ -137,6 +139,7 @@ const initialState = {
     ],
   },
   archive: {
+    id: "archive",
     name: "archive",
     children: [
       {
@@ -262,12 +265,20 @@ const deleteTaskAtPath = (state, path) => {
   }
 };
 
+const orderChildren = (children, fromIndex, toIndex) => {
+  const updatedChildren = [...children];
+  const [movedChild] = updatedChildren.splice(fromIndex, 1);
+  updatedChildren.splice(toIndex, 0, movedChild);
+  return updatedChildren;
+};
+
 const taskSlice = createSlice({
   name: "tasks",
   initialState: {
     ...initialState,
     selectedTask: null,
     selectedArchive: null,
+    exploredTask: null,
   },
   reducers: {
     // (Tree에서) task 선택 시 선택된 task 저장
@@ -277,6 +288,10 @@ const taskSlice = createSlice({
     // (Tree에서) archive 선택 시 선택된 archive 저장
     setSelectedArchiveTask: (state, action) => {
       state.selectedArchive = action.payload;
+    },
+    // (Explore에서) task 선택 시 선택된 task 저장
+    setExploredTask: (state, action) => {
+      state.exploredTask = action.payload;
     },
     // 새로운 task 추가
     addTask: (state, action) => {
@@ -346,12 +361,23 @@ const taskSlice = createSlice({
         deleteTaskAtPath(state.archive, path); // Remove from archive
       }
     },
+    // task의 하위 task간의 ordering하는 함수
+    orderTask: (state, action) => {
+      const { section, path, fromIndex, toIndex } = action.payload;
+      if (state[section]) {
+        const task = getTaskByPath(state[section], path);
+        if (task && task.children) {
+          task.children = orderChildren(task.children, fromIndex, toIndex);
+        }
+      }
+    },
   },
 });
 
 export const {
   setSelectedTask,
   setSelectedArchiveTask,
+  setExploredTask,
   handleNodeClick,
   addTask,
   updateTask,
@@ -361,5 +387,6 @@ export const {
   moveTask,
   archiveTask,
   unarchiveTask,
+  orderTask,
 } = taskSlice.actions;
 export default taskSlice.reducer;

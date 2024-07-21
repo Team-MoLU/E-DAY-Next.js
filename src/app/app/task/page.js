@@ -17,6 +17,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { DraggableTask } from "../../../components/DraggableTask";
 import { useDrop } from "react-dnd";
 import { useRouter } from "next/navigation";
+import common from "@/lib/common/common_fn";
 
 export default function TaskPage() {
   // task data 관련
@@ -31,16 +32,44 @@ export default function TaskPage() {
     selectedTask === null ? [] : selectedTask.path
   );
   const [newTaskName, setNewTaskName] = useState("");
+  const [currentTaskId, setCurrentTaskId] = useState(
+    selectedTask === null ? "root" : selectedTask.id
+  );
+  const [route, setRoute] = useState(
+    selectedTask === null
+      ? [{ id: "root", name: "root" }]
+      : common.findRouteById(selectedTask.id, data)
+  );
+  const [childList, setChildList] = useState(
+    selectedTask === null ? data.children : selectedTask.children
+  );
 
-  // data 변경 시, currentTask refresh
+  // data 변경 시,
   useEffect(() => {
-    setCurrentTask(getTaskByPath(data, path));
+    const newPath = common.findNodePathById(currentTaskId, data);
+    setPath(newPath);
+    const updatedCurrentTask = getTaskByPath(data, newPath);
+    setCurrentTask(updatedCurrentTask);
+    // childList update
+    setChildList(updatedCurrentTask.children);
   }, [data]);
 
-  // path 변경 시, currentTask refresh
+  // current task id 변경 시,
   useEffect(() => {
-    dispatch(setSelectedTask({ ...currentTask, path: path }));
-  }, [path]);
+    // path update
+    const newPath = common.findNodePathById(currentTaskId, data);
+    setPath(newPath);
+    // currentTask update
+    const updatedCurrentTask = getTaskByPath(data, newPath);
+    setCurrentTask(updatedCurrentTask);
+    // route update
+    const newRoute = common.findRouteById(currentTaskId, data);
+    setRoute(newRoute);
+    // selectedTask update
+    dispatch(setSelectedTask({ ...updatedCurrentTask, path: newPath }));
+    // childList update
+    setChildList(updatedCurrentTask.children);
+  }, [currentTaskId]);
 
   // 페이지에 맞는 사이드바 내용으로 설정
   useEffect(() => {
@@ -137,6 +166,9 @@ export default function TaskPage() {
    * 현재 task를 삭제(cascade)하고, 부모 task로 이동하는 함수
    */
   const handleDeleteTask = () => {
+    // currentTask를 부모 Task로 변경
+    const parentTaskId = route[route.length - 2].id;
+    setCurrentTaskId(parentTaskId);
     // dispatch 통해서 현재 node 삭제
     dispatch(
       deleteTask({
@@ -144,10 +176,6 @@ export default function TaskPage() {
         path: path,
       })
     );
-    // currentTask를 부모 Task로 변경
-    const newPath = path.slice(0, -1);
-    setPath(newPath);
-    setCurrentTask(getTaskByPath(data, newPath));
   };
 
   /**
@@ -172,8 +200,7 @@ export default function TaskPage() {
    * @param {*} subtaskPath
    */
   const handleSubtaskDoubleClick = (subtask, subtaskPath) => {
-    setCurrentTask(subtask);
-    setPath(subtaskPath);
+    setCurrentTaskId(subtask.id);
   };
 
   // sidebar 관련
@@ -184,7 +211,7 @@ export default function TaskPage() {
   } = useSelector((state) => state.ui.sidebar);
 
   // Drag and Drop 관련
-  const handleDrop = useCallback(
+  const handleDropFromExplore = useCallback(
     (item) => {
       if (item.section === data.name) {
         // 경로가 동일한 경우
@@ -211,16 +238,42 @@ export default function TaskPage() {
         })
       );
     },
-    [path, data.name, dispatch]
+    [path, data.name]
   ); // path와 data.name을 의존성 배열에 추가
 
-  const [, drop] = useDrop(
+  const handleDropTaskPage = useCallback(
+    (item) => {
+      const updatedTask = {
+        ...currentTask,
+        children: childList,
+      };
+      updateCurrentTask(updatedTask);
+    },
+    [path, data.name, childList]
+  ); // path와 data.name을 의존성 배열에 추가
+
+  const [, dropFromExplore] = useDrop(
     () => ({
-      accept: "TASK",
-      drop: handleDrop,
+      accept: "ExploreItem",
+      drop: handleDropFromExplore,
     }),
-    [handleDrop]
+    [handleDropFromExplore]
   ); // handleDrop을 의존성 배열에 추가
+
+  const [, dropTaskPage] = useDrop(
+    () => ({
+      accept: "TaskPageItem",
+      drop: handleDropTaskPage,
+    }),
+    [handleDropTaskPage]
+  ); // handleDrop을 의존성 배열에 추가
+
+  const handleOrderTask = (fromIndex, toIndex) => {
+    const updatedChildrens = [...childList];
+    const [movedChild] = updatedChildrens.splice(fromIndex, 1);
+    updatedChildrens.splice(toIndex, 0, movedChild);
+    setChildList(updatedChildrens);
+  };
 
   // 검색 관련
   const [searchString, setSearchString] = useState("");
@@ -292,25 +345,21 @@ export default function TaskPage() {
    * @param {*} task
    */
   const handleSearchedTaskDoubleClick = (task) => {
-    dispatch(setSelectedTask(task));
-    let { path, ...newCurrentTask } = task;
-
-    setCurrentTask(newCurrentTask);
-    setPath(path);
-
+    setCurrentTaskId(task.id);
     setSearchString("");
   };
 
   // view return
   return (
-    <div className="task-page" ref={drop}>
+    <div className="task-page">
       <div
+        ref={dropFromExplore}
         className="main-view"
         style={{
           width: sidebarIsOpen ? `calc(100% - ${sidebarWidth}px)` : "100%",
         }}
       >
-        <div className="main-view-content">
+        <div className="main-view-content" ref={dropTaskPage}>
           <label className="block mb-2 font-semibold">검색</label>
           {/* 검색창 */}
           <input
@@ -328,6 +377,7 @@ export default function TaskPage() {
               <ul>
                 {searchedTaskList.map((task, index) => (
                   <li
+                    key={"search" + index}
                     className="task-item"
                     onDoubleClick={() => {
                       handleSearchedTaskDoubleClick(task);
@@ -418,28 +468,16 @@ export default function TaskPage() {
                 {/* 경로 */}
                 <div>
                   <span>경로: </span>
-                  <span
-                    style={{ cursor: "pointer", color: "blue" }}
-                    onClick={() => {
-                      setCurrentTask(data);
-                      setPath([]);
-                    }}
-                  >
-                    {data.name}
-                  </span>
-                  {path.map((p, index) => (
-                    <span key={"p" + index}>
+                  {route.map((r, index) => (
+                    <span key={"r" + index}>
                       {" / "}
                       <span
                         style={{ cursor: "pointer", color: "blue" }}
                         onClick={() => {
-                          setCurrentTask(
-                            getTaskByPath(data, path.slice(0, index + 1))
-                          );
-                          setPath(path.slice(0, index + 1));
+                          setCurrentTaskId(r.id);
                         }}
                       >
-                        {getTaskByPath(data, path.slice(0, index + 1)).name}
+                        {r.name}
                       </span>
                     </span>
                   ))}
@@ -466,18 +504,22 @@ export default function TaskPage() {
 
                 {/* 하위 Task의 List */}
                 <ul>
-                  {currentTask.children.map((task, index) => (
+                  {childList.map((task, index) => (
                     <DraggableTask
                       key={index}
+                      type={"TaskPageItem"}
                       task={task}
                       section={data.name}
                       path={[...path, index]}
+                      parentPath={path}
                       onDoubleClick={() => {
                         handleSubtaskDoubleClick(task, [...path, index]);
                       }}
                       onCheckChange={(e) => {
                         toggleSubTaskCheck(index);
                       }}
+                      index={index} // 현재 인덱스 전달
+                      orderTask={handleOrderTask} // orderTask 함수 전달
                     />
                   ))}
                 </ul>

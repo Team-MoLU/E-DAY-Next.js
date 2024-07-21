@@ -1,12 +1,9 @@
 import React, { useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  handleNodeClickWithSidebar,
-  startResizing,
-  stopResizing,
-  resize,
-} from "@/redux/actions/uiAction";
+import { startResizing, stopResizing, resize } from "@/redux/actions/uiAction";
+import { toggleSidebar } from "@/redux/reducers/uiSlice";
 import TaskDetailSidebar from "./sidebars/TaskDetailSidebar";
+import ArchiveDetailSidebar from "./sidebars/ArchiveDetailSidebar";
 import { Explore } from "./Explore";
 
 const Sidebar = () => {
@@ -51,6 +48,8 @@ const Sidebar = () => {
     switch (activeContent) {
       case "taskDetail":
         return <TaskDetailSidebar />;
+      case "taskDetailReadOnly":
+        return <ArchiveDetailSidebar />;
       case "explore":
         return <Explore />;
       default:
@@ -89,7 +88,9 @@ const Sidebar = () => {
         onMouseDown={handleResizeStart}
       />
       <button
-        onClick={() => dispatch(handleNodeClickWithSidebar())}
+        onClick={() => {
+          dispatch(toggleSidebar());
+        }}
         style={{
           position: "absolute",
           top: "10px",

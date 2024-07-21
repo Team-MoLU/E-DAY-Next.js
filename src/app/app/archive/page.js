@@ -92,7 +92,7 @@ export default function ArchivePage() {
   } = useSelector((state) => state.ui.sidebar);
 
   // Drag and Drop 관련
-  const handleDrop = useCallback(
+  const handleDropFromExplore = useCallback(
     (item) => {
       if (item.section === data.name) {
         // 경로가 동일한 경우
@@ -119,15 +119,15 @@ export default function ArchivePage() {
         })
       );
     },
-    [path, data.name, dispatch]
+    [path, data.name]
   ); // path와 data.name을 의존성 배열에 추가
 
-  const [, drop] = useDrop(
+  const [, dropFromExplore] = useDrop(
     () => ({
-      accept: "TASK",
-      drop: handleDrop,
+      accept: "ExploreItem",
+      drop: handleDropFromExplore,
     }),
-    [handleDrop]
+    [handleDropFromExplore]
   ); // handleDrop을 의존성 배열에 추가
 
   // 검색 관련
@@ -194,8 +194,9 @@ export default function ArchivePage() {
 
   // view return
   return (
-    <div className="task-page" ref={drop}>
+    <div className="task-page">
       <div
+        ref={dropFromExplore}
         className="main-view"
         style={{
           width: sidebarIsOpen ? `calc(100% - ${sidebarWidth}px)` : "100%",
@@ -334,13 +335,17 @@ export default function ArchivePage() {
                   {currentTask.children.map((task, index) => (
                     <DraggableTask
                       key={index}
+                      type={"TaskPageItem"}
                       task={task}
                       section={data.name}
                       path={[...path, index]}
+                      parentPath={path}
                       onDoubleClick={() => {
                         handleSubtaskDoubleClick(task, [...path, index]);
                       }}
                       onCheckChange={() => {}}
+                      index={index}
+                      orderTask={() => {}}
                     />
                   ))}
                 </ul>

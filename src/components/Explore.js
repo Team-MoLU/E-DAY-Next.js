@@ -124,32 +124,30 @@ export const Explore = () => {
   // Drag and Drop 관련
   const handleDropFromTaskPage = useCallback(
     (item) => {
-      if (common.arraysEqual(item.parentPath, path) === false) {
-        if (item.section === data.name) {
-          // 경로가 동일한 경우
-          if (JSON.stringify(item.path) === JSON.stringify(path)) {
-            alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
-            return;
-          }
-          // item.path가 path의 상위 경로인 경우 (path가 item.path의 하위 경로인 경우)
-          if (
-            path.length > item.path.length &&
-            JSON.stringify(item.path) ===
-              JSON.stringify(path.slice(0, item.path.length))
-          ) {
-            alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
-            return;
-          }
+      if (item.section === data.name) {
+        // 경로가 동일한 경우
+        if (JSON.stringify(item.path) === JSON.stringify(path)) {
+          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+          return;
         }
-        dispatch(
-          moveTask({
-            fromSection: item.section,
-            fromPath: item.path,
-            toSection: data.name,
-            toPath: path,
-          })
-        );
+        // item.path가 path의 상위 경로인 경우 (path가 item.path의 하위 경로인 경우)
+        if (
+          path.length > item.path.length &&
+          JSON.stringify(item.path) ===
+            JSON.stringify(path.slice(0, item.path.length))
+        ) {
+          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+          return;
+        }
       }
+      dispatch(
+        moveTask({
+          fromSection: item.section,
+          fromPath: item.path,
+          toSection: data.name,
+          toPath: path,
+        })
+      );
     },
     [path, data.name]
   ); // path와 data.name을 의존성 배열에 추가

@@ -1,0 +1,78 @@
+.name {
+  margin: 0;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.subName {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.layout {
+  display: flex;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup {
+  background-color: #4d4f57;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 500px;
+  min-height: 30vh;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.popupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #40444b;
+}
+
+.popupContent {
+  padding: 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.popupHeader h2 {
+  margin: 0;
+  color: #ffffff;
+}
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.settingItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.subName {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+}

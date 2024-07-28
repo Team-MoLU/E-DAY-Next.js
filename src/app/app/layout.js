@@ -26,6 +26,7 @@ function Sidebar({ onOpenPopup }) {
   return (
     <div className="sidebar">
       <Profile onOpenPopup={onOpenPopup} />
+      <h2 className={styles.category}>일정 관리</h2>
       <ul className="menu">
         {menuItems.map((item) => (
           <li

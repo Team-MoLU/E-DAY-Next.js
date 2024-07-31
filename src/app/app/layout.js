@@ -51,48 +51,41 @@ export default function AppLayout({ children }) {
   const [showPopup, setShowPopup] = useState(false);
 
   return (
-    <Provider store={store}>
-      <DndProvider backend={HTML5Backend}>
-        <div className={styles.layout}>
-          <Sidebar onOpenPopup={() => setShowPopup(true)} />
-          <div className="main-content">{children}</div>
-          {showPopup && (
-            <div className={styles.overlay} onClick={() => setShowPopup(false)}>
-              <div
-                className={styles.popup}
-                onClick={(e) => e.stopPropagation()}
+    <div className={styles.layout}>
+      <Sidebar onOpenPopup={() => setShowPopup(true)} />
+      <div className="main-content">{children}</div>
+      {showPopup && (
+        <div className={styles.overlay} onClick={() => setShowPopup(false)}>
+          <div className={styles.popup} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.popupHeader}>
+              <h2 className={styles.name}>설정</h2>
+              <button
+                onClick={() => setShowPopup(false)}
+                className={styles.closeButton}
               >
-                <div className={styles.popupHeader}>
-                  <h2 className={styles.name}>설정</h2>
-                  <button
-                    onClick={() => setShowPopup(false)}
-                    className={styles.closeButton}
-                  >
-                    <Image
-                      src="/icon/close.svg"
-                      alt="Close"
-                      width={24}
-                      height={24}
-                    />
-                  </button>
-                </div>
-                <div className={styles.popupContent}>
-                  <ul className="menu">
-                    <li className={styles.settingItem}>
-                      <h2 className={styles.subName}>대표 색상 변경</h2>
-                      <ColorPicker />
-                    </li>
-                    <li className={styles.settingItem}>
-                      <h2 className={styles.subName}>다른 설정 속성들...</h2>
-                    </li>
-                    {/* 더 많은 설정 항목들... */}
-                  </ul>
-                </div>
-              </div>
+                <Image
+                  src="/icon/close.svg"
+                  alt="Close"
+                  width={24}
+                  height={24}
+                />
+              </button>
             </div>
-          )}
+            <div className={styles.popupContent}>
+              <ul className="menu">
+                <li className={styles.settingItem}>
+                  <h2 className={styles.subName}>대표 색상 변경</h2>
+                  <ColorPicker />
+                </li>
+                <li className={styles.settingItem}>
+                  <h2 className={styles.subName}>다른 설정 속성들...</h2>
+                </li>
+                {/* 더 많은 설정 항목들... */}
+              </ul>
+            </div>
+          </div>
         </div>
-      </DndProvider>
-    </Provider>
+      )}
+    </div>
   );
 }

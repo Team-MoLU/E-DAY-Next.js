@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import store from "../../redux/store";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Icon from "../../components/Icon";
 import ColorPicker from "@/components/menubar/ColorPicker";
 import Profile from "@/components/menubar/Profile";
@@ -14,14 +14,34 @@ import styles from "./layout.module.css";
 
 function Sidebar({ onOpenPopup }) {
   const pathname = usePathname();
+  const router = useRouter();
   const primaryColor = useSelector((state) => state.theme.primaryColor);
+  const [lastHomePath, setLastHomePath] = useState("/app");
 
   const menuItems = [
-    { name: "홈", icon: "home", href: "/app" },
+    {
+      name: "홈",
+      icon: "home",
+      href: lastHomePath,
+      isHome: true,
+      homePaths: ["/app", "/app/task", "/app/tree-view"],
+    },
     { name: "캘린더", icon: "calendar", href: "/app/calendar" },
     { name: "아카이브", icon: "archive", href: "/app/archive" },
     { name: "휴지통", icon: "trash", href: "/app/trash" },
   ];
+
+  useEffect(() => {
+    if (menuItems[0].homePaths.includes(pathname)) {
+      setLastHomePath(pathname);
+    }
+  }, [pathname]);
+
+  const handleHomeClick = (e) => {
+    if (menuItems[0].homePaths.includes(pathname)) {
+      e.preventDefault();
+    }
+  };
 
   return (
     <div className="sidebar">
@@ -31,12 +51,26 @@ function Sidebar({ onOpenPopup }) {
         {menuItems.map((item) => (
           <li
             key={item.name}
-            className={`menuItem ${pathname === item.href ? "active" : ""}`}
+            className={`menuItem ${
+              item.isHome
+                ? menuItems[0].homePaths.includes(pathname)
+                  ? "active"
+                  : ""
+                : pathname === item.href
+                ? "active"
+                : ""
+            }`}
             style={
-              pathname === item.href ? { backgroundColor: primaryColor } : {}
+              (item.isHome && menuItems[0].homePaths.includes(pathname)) ||
+              (!item.isHome && pathname === item.href)
+                ? { backgroundColor: primaryColor }
+                : {}
             }
           >
-            <Link href={item.href}>
+            <Link
+              href={item.href}
+              onClick={item.isHome ? handleHomeClick : undefined}
+            >
               <Icon name={item.icon} size={24} />
               <span>{item.name}</span>
             </Link>

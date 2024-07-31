@@ -145,3 +145,14 @@ button {
 button:hover {
   background-color: #0056b3;
 }
+
+.top-bar {
+  margin-left: 250px; /* 사이드바의 너비만큼 왼쪽 여백 추가 */
+  padding: 20px; /* 내부 여백 */
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

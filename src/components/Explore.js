@@ -10,6 +10,8 @@ import {
 import { useDrop } from "react-dnd";
 import { DraggableTask } from "./DraggableTask";
 import common from "@/lib/common/common_fn";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export const Explore = () => {
   // task data 관련
@@ -48,6 +50,9 @@ export const Explore = () => {
       setCurrentTask(updatedCurrentTask);
       // childList update
       setChildList(updatedCurrentTask.children);
+      // route update
+      const newRoute = common.findRouteById(currentTaskId, data);
+      setRoute(newRoute);
     }
   }, [data]);
 
@@ -67,6 +72,55 @@ export const Explore = () => {
     // childList update
     setChildList(updatedCurrentTask.children);
   }, [currentTaskId]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "name") {
+      setCurrentTask({ ...currentTask, name: value });
+    } else if (name === "memo") {
+      setCurrentTask({ ...currentTask, memo: value });
+    }
+  };
+
+  const handleNameInputBlur = () => {
+    const updatedTask = {
+      ...currentTask,
+      name: currentTask.name,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
+  const handleMemoInputBlur = () => {
+    const updatedTask = {
+      ...currentTask,
+      memo: currentTask.memo,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
+  const handlePriorityClick = () => {
+    const newPriority = (currentTask.priority + 1) % 4;
+    const updatedTask = {
+      ...currentTask,
+      priority: newPriority,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
+  const handleDateRangeChange = (update) => {
+    const updatedTask = {
+      ...currentTask,
+      startDate: update[0] ? formatDate(update[0]) : null,
+      endDate: update[1] ? formatDate(update[1]) : null,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
+  const formatDate = (date) => {
+    const offset = date.getTimezoneOffset();
+    const adjustedDate = new Date(date.getTime() - offset * 60 * 1000);
+    return adjustedDate.toISOString().split("T")[0];
+  };
 
   /**
    * subtask 를 더블클릭했을 때, 해당 task의 하위로 이동하는 함수
@@ -197,7 +251,7 @@ export const Explore = () => {
       setSearchedTaskList([]);
     } else {
       setIsSearching(true);
-      const result = searchTasks(currentTask, searchString);
+      const result = searchTasks(currentTask, searchString, path);
       setSearchedTaskList(result);
     }
   }, [searchString, currentTask]);
@@ -211,14 +265,14 @@ export const Explore = () => {
   };
 
   // 재귀적으로 작업 목록을 검색하는 함수
-  const searchTasks = (task, searchString, path = []) => {
+  const searchTasks = (task, searchString, currentTaskPath = [], path = []) => {
     const result = [];
 
     // 현재 작업이 검색 문자열을 포함하면 결과에 추가
     if (matchesSearchString(task.name, searchString)) {
       const foundTask = {
         ...task,
-        path: path,
+        path: currentTaskPath.concat(path),
       };
       result.push(foundTask);
     }
@@ -226,7 +280,14 @@ export const Explore = () => {
     // 자식 작업이 있으면 재귀적으로 검색
     if (task.children && task.children.length > 0) {
       task.children.forEach((child, index) => {
-        result.push(...searchTasks(child, searchString, path.concat(index)));
+        result.push(
+          ...searchTasks(
+            child,
+            searchString,
+            currentTaskPath,
+            path.concat(index)
+          )
+        );
       });
     }
 
@@ -333,10 +394,59 @@ export const Explore = () => {
                   checked={currentTask.check}
                   onChange={toggleCurrentTaskCheck}
                 />
-                <span>{currentTask.name}</span>
+                <input
+                  type="text"
+                  name="name"
+                  value={currentTask.name}
+                  onChange={handleInputChange}
+                  onBlur={handleNameInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
+                />
               </>
             )}
-
+            {/* 상세 */}
+            {currentTask.name !== "root" && (
+              <>
+                <div>
+                  <label>Priority:</label>
+                  <span
+                    style={{
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                    }}
+                    onClick={handlePriorityClick}
+                  >
+                    {currentTask.priority}
+                  </span>
+                </div>
+                <div>
+                  <label>Date Range:</label>
+                  <DatePicker
+                    selectsRange={true}
+                    startDate={
+                      currentTask.startDate
+                        ? new Date(currentTask.startDate)
+                        : null
+                    }
+                    endDate={
+                      currentTask.endDate ? new Date(currentTask.endDate) : null
+                    }
+                    onChange={handleDateRangeChange}
+                    dateFormat="yyyy-MM-dd"
+                    isClearable
+                    timeZone="UTC"
+                  />
+                </div>
+                <div>
+                  <label>Memo:</label>
+                  <textarea
+                    name="memo"
+                    value={currentTask.memo}
+                    onChange={handleInputChange}
+                    onBlur={handleMemoInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
+                  />
+                </div>
+              </>
+            )}
             {/* 하위 Task의 List */}
             <ul>
               {childList.map((task, index) => (

@@ -10,21 +10,21 @@ import {
   moveTask,
   archiveTask,
 } from "@/redux/reducers/taskSlice";
-import { setSidebarContent, toggleSidebar } from "@/redux/reducers/uiSlice";
 import Sidebar from "../../../components/Sidebar";
 import { v4 as uuidv4 } from "uuid";
 import "react-datepicker/dist/react-datepicker.css";
 import { DraggableTask } from "../../../components/DraggableTask";
 import { useDrop } from "react-dnd";
-import { useRouter } from "next/navigation";
 import common from "@/lib/common/common_fn";
+import { setMenu, setSearchString } from "@/redux/reducers/menuSlice";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function TaskPage() {
   // task data 관련
   const data = useSelector((state) => state.tasks.root);
   const selectedTask = useSelector((state) => state.tasks.selectedTask);
   const dispatch = useDispatch();
-  const router = useRouter();
   const [currentTask, setCurrentTask] = useState(
     selectedTask === null ? data : selectedTask
   );
@@ -44,6 +44,11 @@ export default function TaskPage() {
     selectedTask === null ? data.children : selectedTask.children
   );
 
+  // Topbar의 menu 설정
+  useEffect(() => {
+    dispatch(setMenu("list-view"));
+  }, []);
+
   // data 변경 시,
   useEffect(() => {
     const newPath = common.findNodePathById(currentTaskId, data);
@@ -53,6 +58,12 @@ export default function TaskPage() {
     // childList update
     setChildList(updatedCurrentTask.children);
   }, [data]);
+
+  // selectedTask 변경 시,
+  useEffect(() => {
+    const selectedTaskId = selectedTask === null ? "root" : selectedTask.id;
+    setCurrentTaskId(selectedTaskId);
+  }, [selectedTask]);
 
   // current task id 변경 시,
   useEffect(() => {
@@ -71,22 +82,53 @@ export default function TaskPage() {
     setChildList(updatedCurrentTask.children);
   }, [currentTaskId]);
 
-  // 페이지에 맞는 사이드바 내용으로 설정
-  useEffect(() => {
-    dispatch(setSidebarContent("taskDetail"));
-  }, [dispatch]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCurrentTask({ ...currentTask, [name]: value });
+    if (name === "name") {
+      setCurrentTask({ ...currentTask, name: value });
+    } else if (name === "memo") {
+      setCurrentTask({ ...currentTask, memo: value });
+    }
   };
 
-  const handleInputBlur = () => {
+  const handleNameInputBlur = () => {
     const updatedTask = {
       ...currentTask,
       name: currentTask.name,
     };
     updateCurrentTask(updatedTask);
+  };
+
+  const handleMemoInputBlur = () => {
+    const updatedTask = {
+      ...currentTask,
+      memo: currentTask.memo,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
+  const handlePriorityClick = () => {
+    const newPriority = (currentTask.priority + 1) % 4;
+    const updatedTask = {
+      ...currentTask,
+      priority: newPriority,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
+  const handleDateRangeChange = (update) => {
+    const updatedTask = {
+      ...currentTask,
+      startDate: update[0] ? formatDate(update[0]) : null,
+      endDate: update[1] ? formatDate(update[1]) : null,
+    };
+    updateCurrentTask(updatedTask);
+  };
+
+  const formatDate = (date) => {
+    const offset = date.getTimezoneOffset();
+    const adjustedDate = new Date(date.getTime() - offset * 60 * 1000);
+    return adjustedDate.toISOString().split("T")[0];
   };
 
   /**
@@ -182,16 +224,16 @@ export default function TaskPage() {
    * 현재 task를 아카이빙하고, 부모 task로 이동하는 함수
    */
   const handleArchiveTask = () => {
+    // currentTask를 부모 Task로 변경
+    const parentTaskId = route[route.length - 2].id;
+    setCurrentTaskId(parentTaskId);
+    // dispatch 통해서 현재 node 아카이브
     dispatch(
       archiveTask({
         section: data.name,
         path: path,
       })
     );
-    // currentTask를 부모 Task로 변경
-    const newPath = path.slice(0, -1);
-    setPath(newPath);
-    setCurrentTask(getTaskByPath(data, newPath));
   };
 
   /**
@@ -276,7 +318,7 @@ export default function TaskPage() {
   };
 
   // 검색 관련
-  const [searchString, setSearchString] = useState("");
+  const searchString = useSelector((state) => state.menu.searchString);
   const [isSearching, setIsSearching] = useState(false);
   const [searchedTaskList, setSearchedTaskList] = useState([]);
 
@@ -286,7 +328,7 @@ export default function TaskPage() {
       setSearchedTaskList([]);
     } else {
       setIsSearching(true);
-      const result = searchTasks(currentTask, searchString);
+      const result = searchTasks(currentTask, searchString, path);
       setSearchedTaskList(result);
     }
   }, [searchString, currentTask]);
@@ -300,14 +342,14 @@ export default function TaskPage() {
   };
 
   // 재귀적으로 작업 목록을 검색하는 함수
-  const searchTasks = (task, searchString, path = []) => {
+  const searchTasks = (task, searchString, currentTaskPath = [], path = []) => {
     const result = [];
 
     // 현재 작업이 검색 문자열을 포함하면 결과에 추가
     if (matchesSearchString(task.name, searchString)) {
       const foundTask = {
         ...task,
-        path: path,
+        path: currentTaskPath.concat(path),
       };
       result.push(foundTask);
     }
@@ -315,7 +357,14 @@ export default function TaskPage() {
     // 자식 작업이 있으면 재귀적으로 검색
     if (task.children && task.children.length > 0) {
       task.children.forEach((child, index) => {
-        result.push(...searchTasks(child, searchString, path.concat(index)));
+        result.push(
+          ...searchTasks(
+            child,
+            searchString,
+            currentTaskPath,
+            path.concat(index)
+          )
+        );
       });
     }
 
@@ -346,7 +395,7 @@ export default function TaskPage() {
    */
   const handleSearchedTaskDoubleClick = (task) => {
     setCurrentTaskId(task.id);
-    setSearchString("");
+    dispatch(setSearchString(""));
   };
 
   // view return
@@ -360,16 +409,6 @@ export default function TaskPage() {
         }}
       >
         <div className="main-view-content" ref={dropTaskPage}>
-          <label className="block mb-2 font-semibold">검색</label>
-          {/* 검색창 */}
-          <input
-            type="text"
-            name="search"
-            className="w-full p-2 rounded"
-            value={searchString}
-            onChange={(e) => setSearchString(e.target.value)}
-            placeholder={currentTask.name + " 검색"}
-          />
           {isSearching && (
             <div>
               <h3>검색 결과:</h3>
@@ -402,60 +441,6 @@ export default function TaskPage() {
           )}
           {!isSearching && (
             <div>
-              {/* 오늘 할 일 버튼 */}
-              <button
-                onClick={() => {
-                  if (sidebarIsOpen && sidebarActiveContent === "taskDetail") {
-                    dispatch(toggleSidebar());
-                  }
-                  router.push(`/app`);
-                }}
-              >
-                오늘 할 일
-              </button>
-              {/* 트리뷰 버튼 */}
-              <button
-                onClick={() => {
-                  router.push(`tree-view/`);
-                }}
-              >
-                트리뷰
-              </button>
-              {/* 탐색 버튼 */}
-              <button
-                onClick={() => {
-                  dispatch(setSidebarContent("explore"));
-                  // side view가 꺼져있으면 켜기
-                  if (sidebarIsOpen === false) {
-                    dispatch(toggleSidebar());
-                  }
-                  // side view 가 켜져있고, 이미 explore 이면, 끄기
-                  else if (sidebarActiveContent === "explore") {
-                    dispatch(toggleSidebar());
-                  }
-                }}
-              >
-                탐색
-              </button>
-              {/* 상세 버튼 */}
-              {currentTask.name !== "root" && (
-                <button
-                  onClick={() => {
-                    dispatch(setSelectedTask({ ...currentTask, path }));
-                    dispatch(setSidebarContent("taskDetail"));
-                    // side view가 꺼져있으면 켜기
-                    if (sidebarIsOpen === false) {
-                      dispatch(toggleSidebar());
-                    }
-                    // side view 가 켜져있고, 이미 taskDetail 이면, 끄기
-                    else if (sidebarActiveContent === "taskDetail") {
-                      dispatch(toggleSidebar());
-                    }
-                  }}
-                >
-                  상세
-                </button>
-              )}
               {/* 삭제 버튼 */}
               {currentTask.name !== "root" && (
                 <button onClick={handleDeleteTask}>삭제</button>
@@ -465,23 +450,6 @@ export default function TaskPage() {
                 <button onClick={handleArchiveTask}>아카이빙</button>
               )}
               <div>
-                {/* 경로 */}
-                <div>
-                  <span>경로: </span>
-                  {route.map((r, index) => (
-                    <span key={"r" + index}>
-                      {" / "}
-                      <span
-                        style={{ cursor: "pointer", color: "blue" }}
-                        onClick={() => {
-                          setCurrentTaskId(r.id);
-                        }}
-                      >
-                        {r.name}
-                      </span>
-                    </span>
-                  ))}
-                </div>
                 {/* 현재 Task의 이름 */}
                 {currentTask.name === "root" ? (
                   <h2>{currentTask.name}</h2>
@@ -497,11 +465,56 @@ export default function TaskPage() {
                       name="name"
                       value={currentTask.name}
                       onChange={handleInputChange}
-                      onBlur={handleInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
+                      onBlur={handleNameInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
                     />
                   </>
                 )}
-
+                {/* 상세 */}
+                {currentTask.name !== "root" && (
+                  <>
+                    <div>
+                      <label>Priority:</label>
+                      <span
+                        style={{
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                        }}
+                        onClick={handlePriorityClick}
+                      >
+                        {currentTask.priority}
+                      </span>
+                    </div>
+                    <div>
+                      <label>Date Range:</label>
+                      <DatePicker
+                        selectsRange={true}
+                        startDate={
+                          currentTask.startDate
+                            ? new Date(currentTask.startDate)
+                            : null
+                        }
+                        endDate={
+                          currentTask.endDate
+                            ? new Date(currentTask.endDate)
+                            : null
+                        }
+                        onChange={handleDateRangeChange}
+                        dateFormat="yyyy-MM-dd"
+                        isClearable
+                        timeZone="UTC"
+                      />
+                    </div>
+                    <div>
+                      <label>Memo:</label>
+                      <textarea
+                        name="memo"
+                        value={currentTask.memo}
+                        onChange={handleInputChange}
+                        onBlur={handleMemoInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
+                      />
+                    </div>
+                  </>
+                )}
                 {/* 하위 Task의 List */}
                 <ul>
                   {childList.map((task, index) => (

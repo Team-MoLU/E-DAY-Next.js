@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import store from "../../redux/store";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import Topbar from "@/components/tobbars/Topbar";
 
 export default function AppLayout({ children }) {
   return (
@@ -20,6 +21,7 @@ export default function AppLayout({ children }) {
       </div>
       <Provider store={store}>
         <DndProvider backend={HTML5Backend}>
+          <Topbar />
           <div className="main-content">{children}</div>
         </DndProvider>
       </Provider>

@@ -6,6 +6,7 @@ import {
   getTaskByPath,
   restoreTask,
 } from "@/redux/reducers/taskSlice";
+import { setMenu } from "@/redux/reducers/menuSlice";
 
 export default function TrashPage() {
   // task data 관련
@@ -13,6 +14,10 @@ export default function TrashPage() {
   const dispatch = useDispatch();
   const [currentTask, setCurrentTask] = useState(data);
   const [path, setPath] = useState([]);
+
+  useEffect(() => {
+    dispatch(setMenu("trash"));
+  }, []);
 
   useEffect(() => {
     setCurrentTask(getTaskByPath(data, path));

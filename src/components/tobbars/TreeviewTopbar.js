@@ -1,21 +1,20 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setMenu } from "@/redux/reducers/menuSlice";
-import { toggleSidebar, setSidebarContent } from "@/redux/reducers/uiSlice";
+import { setTreeFilter, toggleTreeFilter } from "@/redux/reducers/uiSlice";
 import { useRouter } from "next/navigation";
 import styles from "./TreeviewTopbar.module.css";
 import Icon from "@/components/Icon";
 
 export const TreeviewTopbar = () => {
-  const [isFilterActive, setIsFilterActive] = useState(false);
-
   const dispatch = useDispatch();
   // todo 1: tree-view filter 상태를 redux에 저장
+  const filter = useSelector((state) => state.ui.treeFilter);
   const router = useRouter();
 
   const handleFilterButtonClick = () => {
     // todo 1: tree-view filter 상태에 toggle
+    dispatch(toggleTreeFilter());
   };
 
   const handleHomeButtonClick = () => {
@@ -40,7 +39,7 @@ export const TreeviewTopbar = () => {
         <div className={styles.buttonWrapper}>
           <button
             className={`${styles.toggleButton} ${
-              isFilterActive ? styles.active : ""
+              filter.isOpen ? styles.active : ""
             }`}
             onClick={handleFilterButtonClick}
           >

@@ -36,7 +36,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px;
+  padding: 12px;
   background: none;
   border: none;
   color: #f2f3fa;
@@ -55,7 +55,7 @@
 
 .toggleButton.active {
   background-color: var(--primary-color);
-  border-radius: 20px;
+  border-radius: 4px;
 }
 
 .hintText {

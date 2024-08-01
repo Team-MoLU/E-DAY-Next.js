@@ -1,12 +1,10 @@
-import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setTreeFilter } from "@/redux/reducers/uiSlice";
+import { setTreeFilter, toggleTreeFilter } from "@/redux/reducers/uiSlice";
 
 const TreeFilter = () => {
   const dispatch = useDispatch();
   const filter = useSelector((state) => state.ui.treeFilter);
   const allTasks = useSelector((state) => state.tasks.root.children);
-  const [isOpen, setIsOpen] = useState(true);
 
   const handleFilterChange = (filterType, value) => {
     dispatch(setTreeFilter({ ...filter, [filterType]: value }));
@@ -56,7 +54,7 @@ const TreeFilter = () => {
   const filteredRoots = allTasks.filter(isRootValid);
 
   const toggleFilter = () => {
-    setIsOpen(!isOpen);
+    dispatch(toggleTreeFilter());
   };
 
   const refreshFilter = () => {
@@ -72,7 +70,7 @@ const TreeFilter = () => {
 
   return (
     <div className="relative">
-      {isOpen ? (
+      {filter.isOpen ? (
         <div className="fixed right-5 bg-slate-300 rounded-md shadow-lg p-4 w-64 z-50 transition-all duration-300 ease-in-out">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold">필터</h3>
@@ -156,12 +154,7 @@ const TreeFilter = () => {
           </div>
         </div>
       ) : (
-        <button
-          onClick={toggleFilter}
-          className="fixed right-5 top-5 bg-blue-500 text-white px-4 py-2 rounded shadow-lg z-50 transition-all duration-300 ease-in-out"
-        >
-          필터
-        </button>
+        <div />
       )}
     </div>
   );

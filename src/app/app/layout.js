@@ -15,7 +15,6 @@ import styles from "./layout.module.css";
 
 function Sidebar({ onOpenPopup }) {
   const pathname = usePathname();
-  const router = useRouter();
   const primaryColor = useSelector((state) => state.theme.primaryColor);
   const [lastHomePath, setLastHomePath] = useState("/app");
 
@@ -36,6 +35,7 @@ function Sidebar({ onOpenPopup }) {
     if (menuItems[0].homePaths.includes(pathname)) {
       setLastHomePath(pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   const handleHomeClick = (e) => {
@@ -88,8 +88,13 @@ export default function AppLayout({ children }) {
   return (
     <div className={styles.layout}>
       <Sidebar onOpenPopup={() => setShowPopup(true)} />
-      <Topbar />
-      <div className="main-content">{children}</div>
+      <div className={styles.topbar}>
+        <Topbar />
+      </div>
+      <main className={styles.mainContent}>
+        <div className={styles.contentArea}>{children}</div>
+      </main>
+
       {showPopup && (
         <div className={styles.overlay} onClick={() => setShowPopup(false)}>
           <div className={styles.popup} onClick={(e) => e.stopPropagation()}>
@@ -99,12 +104,7 @@ export default function AppLayout({ children }) {
                 onClick={() => setShowPopup(false)}
                 className={styles.closeButton}
               >
-                <Image
-                  src="/icon/close.svg"
-                  alt="Close"
-                  width={24}
-                  height={24}
-                />
+                <Icon name="close" size={24} />
               </button>
             </div>
             <div className={styles.popupContent}>

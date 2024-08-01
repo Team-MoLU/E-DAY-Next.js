@@ -4,8 +4,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { setMenu } from "@/redux/reducers/menuSlice";
 import { toggleSidebar, setSidebarContent } from "@/redux/reducers/uiSlice";
 import { useRouter } from "next/navigation";
+import styles from "./TreeviewTopbar.module.css";
+import Icon from "@/components/Icon";
 
 export const TreeviewTopbar = () => {
+  const [isFilterActive, setIsFilterActive] = useState(false);
+
   const dispatch = useDispatch();
   // todo 1: tree-view filter 상태를 redux에 저장
   const router = useRouter();
@@ -25,13 +29,38 @@ export const TreeviewTopbar = () => {
   };
 
   return (
-    <div>
-      <h1>트리뷰</h1>
-      {/* todo 1: tree-view filter 상태에 toggle, button 배경 다르게 */}
-      <button onClick={handleFilterButtonClick}>필터</button>
-
-      <button onClick={handleHomeButtonClick}>홈</button>
-      <button onClick={handleListviewButtonClick}>리스트뷰</button>
+    <div className={styles.topbar}>
+      <div className={styles.leftItems}>
+        <div className={styles.icon}>
+          <Icon name="treeview" size={24} />
+        </div>
+        <h1 className={styles.text}>트리뷰</h1>
+      </div>
+      <div className={styles.rightItems}>
+        <div className={styles.buttonWrapper}>
+          <button
+            className={`${styles.toggleButton} ${
+              isFilterActive ? styles.active : ""
+            }`}
+            onClick={handleFilterButtonClick}
+          >
+            <Icon name="filter" size={24} />
+          </button>
+          <span className={styles.hintText}>필터</span>
+        </div>
+        <div className={styles.buttonWrapper}>
+          <button className={styles.button} onClick={handleHomeButtonClick}>
+            <Icon name="home" size={24} />
+          </button>
+          <span className={styles.hintText}>홈</span>
+        </div>
+        <div className={styles.buttonWrapper}>
+          <button className={styles.button} onClick={handleListviewButtonClick}>
+            <Icon name="list" size={24} />
+          </button>
+          <span className={styles.hintText}>리스트뷰</span>
+        </div>
+      </div>
     </div>
   );
 };

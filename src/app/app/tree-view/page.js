@@ -5,12 +5,17 @@ import Tree from "../../../components/Tree";
 import TreeFilter from "@/components/TreeFilter";
 import { getTaskByPath, setSelectedTask } from "@/redux/reducers/taskSlice";
 import { useDispatch } from "react-redux";
+import { setMenu } from "@/redux/reducers/menuSlice";
 
 export default function TreeViewPage() {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(setMenu("tree-view"));
+  }, []);
 
   useEffect(() => {
     const updateSize = () => {

@@ -6,6 +6,7 @@ import { Provider, useSelector, useDispatch } from "react-redux";
 import store from "../../redux/store";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import Topbar from "@/components/tobbars/Topbar";
 import { usePathname, useRouter } from "next/navigation";
 import Icon from "../../components/Icon";
 import ColorPicker from "@/components/menubar/ColorPicker";
@@ -87,6 +88,7 @@ export default function AppLayout({ children }) {
   return (
     <div className={styles.layout}>
       <Sidebar onOpenPopup={() => setShowPopup(true)} />
+      <Topbar />
       <div className="main-content">{children}</div>
       {showPopup && (
         <div className={styles.overlay} onClick={() => setShowPopup(false)}>

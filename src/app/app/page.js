@@ -12,6 +12,7 @@ import Sidebar from "../../components/Sidebar";
 import { v4 as uuidv4 } from "uuid";
 import { useDrop } from "react-dnd";
 import { useRouter } from "next/navigation";
+import { setMenu } from "@/redux/reducers/menuSlice";
 
 export default function HomePage() {
   // task data 관련
@@ -20,6 +21,10 @@ export default function HomePage() {
   const router = useRouter();
   const [newTaskName, setNewTaskName] = useState("");
   const [todayTaskList, setTodayTaskList] = useState([]);
+
+  useEffect(() => {
+    dispatch(setMenu("home"));
+  }, []);
 
   // data 변경 시, today task list refresh
   useEffect(() => {
@@ -155,38 +160,6 @@ export default function HomePage() {
         }}
       >
         <div className="main-view-content">
-          {/* 리스트뷰 버튼 */}
-          <button
-            onClick={() => {
-              router.push(`app/task/`);
-            }}
-          >
-            리스트뷰
-          </button>
-          {/* 트리뷰 버튼 */}
-          <button
-            onClick={() => {
-              router.push(`app/tree-view/`);
-            }}
-          >
-            트리뷰
-          </button>
-          {/* 탐색 버튼 */}
-          <button
-            onClick={() => {
-              dispatch(setSidebarContent("explore"));
-              // side view가 꺼져있으면 켜기
-              if (sidebarIsOpen === false) {
-                dispatch(toggleSidebar());
-              }
-              // side view 가 켜져있고, 이미 explore 이면, 끄기
-              else if (sidebarActiveContent === "explore") {
-                dispatch(toggleSidebar());
-              }
-            }}
-          >
-            탐색
-          </button>
           <div>
             <h1>오늘 할 일</h1>
             {/* 오늘 할 일의 List */}

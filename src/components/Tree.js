@@ -11,6 +11,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
   const zoomRef = useRef(null);
   const scaleRef = useRef(d3.zoomIdentity);
   const simulationRef = useRef(null);
+  const primaryColor = useSelector((state) => state.theme.primaryColor);
 
   const memoizedData = useMemo(() => data.children || [], [data]);
 
@@ -221,13 +222,13 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
             )
             .strength(1)
         )
-        .force("charge", d3.forceManyBody().strength(-300)) // 척력 증가
+        .force("charge", d3.forceManyBody().strength(-100)) // 척력 증가
         .force(
           "radial",
           d3.forceRadial((d) => radialScale(d.depth), 0, 0).strength(1) // radial force 강도 증가
         )
         .force("center", d3.forceCenter(0, 0))
-        .force("collision", d3.forceCollide().radius(20)) // 충돌 반지름 증가
+        .force("collision", d3.forceCollide().radius(10)) // 충돌 반지름 증가
         .on("tick", () => {
           nodes.forEach((node) => {
             if (node.depth === 0) {
@@ -293,17 +294,18 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     // 링크 렌더링
     const link = g
       .append("g")
-      .attr("stroke-opacity", 0.6)
+      .attr("stroke-opacity", 0.7)
       .selectAll("line")
       .data(links)
       .join("line")
       .attr("stroke", (d) => {
         // 타겟 노드의 상태를 기준으로 색상 결정
         if (d.target.data.check) {
-          const topLevelParentId = findTopLevelParentId(data, d.target.data.id);
-          return common.getLighterColorFromUuid(topLevelParentId, 15);
+          // const topLevelParentId = findTopLevelParentId(data, d.target.data.id);
+          // return common.getLighterColorFromUuid(topLevelParentId, 15);
+          return common.getLighterColor(primaryColor, 15);
         } else {
-          return "gray";
+          return "#383A41";
         }
       });
 
@@ -324,16 +326,13 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       .append("circle")
       .attr("fill", (d) =>
         d.depth === 0
-          ? common.getColorFromUuid(d.data.id)
+          ? primaryColor
           : d.data.check
-          ? common.getLighterColorFromUuid(
-              findTopLevelParentId(data, d.data.id),
-              15
-            )
-          : "gray"
+          ? common.getLighterColor(primaryColor, 15)
+          : "#383A41"
       )
       .attr("stroke-width", 1.5)
-      .attr("r", (d) => (d.depth === 0 ? 7 : 5))
+      .attr("r", (d) => (d.depth === 0 ? 12 : 10))
       .style("cursor", "pointer");
 
     // 검색어와 일치하는 노드 강조
@@ -348,7 +347,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
           d.data._matches
       )
       .append("circle")
-      .attr("r", (d) => (d.depth === 0 ? 10 : 8))
+      .attr("r", (d) => (d.depth === 0 ? 14 : 12))
       .attr("fill", "none")
       .attr("stroke", (d) =>
         common.getLighterColorFromUuid(
@@ -361,11 +360,11 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
     // 레이블 렌더링
     const labels = node
       .append("text")
-      .attr("dy", 20)
+      .attr("dy", 24)
       .attr("text-anchor", "middle")
       .text((d) => d.data.name)
       .style("font-size", "10px")
-      .style("fill", "black")
+      .style("fill", "#EAEDF3")
       .style("opacity", 0);
 
     // 레이블 가시성 업데이트 함수
@@ -432,7 +431,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
           .select("circle")
           .transition()
           .duration(200)
-          .attr("r", (d) => (d.depth === 0 ? 9 : 7));
+          .attr("r", (d) => (d.depth === 0 ? 14 : 12));
         highlightConnectedNodes(d, 0.2);
       })
       .on("mouseout", function (event, d) {
@@ -440,7 +439,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
           .select("circle")
           .transition()
           .duration(200)
-          .attr("r", (d) => (d.depth === 0 ? 7 : 5));
+          .attr("r", (d) => (d.depth === 0 ? 12 : 10));
 
         const t = d3.transition().duration(250).ease(d3.easeCubicOut);
         node.transition(t).style("opacity", 1);
@@ -465,6 +464,7 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
       simulationRef.current.stop();
     };
   }, [
+    primaryColor,
     data,
     filter.searchTerm,
     processedData,

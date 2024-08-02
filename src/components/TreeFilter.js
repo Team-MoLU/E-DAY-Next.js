@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setTreeFilter } from "@/redux/reducers/uiSlice";
 import styles from "./TreeFilter.module.css";
@@ -8,6 +9,36 @@ const TreeFilter = () => {
   const dispatch = useDispatch();
   const filter = useSelector((state) => state.ui.treeFilter);
   const allTasks = useSelector((state) => state.tasks.root.children);
+  const filterPanelRef = useRef(null);
+
+  useEffect(() => {
+    const preventDefaultEvents = (e) => {
+      if (e.type === "click") return; // 클릭은 허용
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const filterPanel = filterPanelRef.current;
+    if (filterPanel) {
+      filterPanel.addEventListener("contextmenu", preventDefaultEvents);
+      filterPanel.addEventListener("dblclick", preventDefaultEvents);
+      filterPanel.addEventListener("dragstart", preventDefaultEvents);
+      filterPanel.addEventListener("mousedown", (e) => {
+        if (e.detail > 1) {
+          e.preventDefault(); // 더블클릭 방지
+        }
+      });
+    }
+
+    return () => {
+      if (filterPanel) {
+        filterPanel.removeEventListener("contextmenu", preventDefaultEvents);
+        filterPanel.removeEventListener("dblclick", preventDefaultEvents);
+        filterPanel.removeEventListener("dragstart", preventDefaultEvents);
+        filterPanel.removeEventListener("mousedown", preventDefaultEvents);
+      }
+    };
+  }, []);
 
   const handleFilterChange = (filterType, value) => {
     dispatch(setTreeFilter({ ...filter, [filterType]: value }));
@@ -66,7 +97,7 @@ const TreeFilter = () => {
   return (
     <div className={styles.container}>
       {filter.isOpen && (
-        <div className={styles.filterPanel}>
+        <div className={styles.filterPanel} ref={filterPanelRef}>
           <div className={styles.header}>
             <h3 className={styles.title}>필터</h3>
             <div>

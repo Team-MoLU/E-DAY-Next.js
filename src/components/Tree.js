@@ -347,14 +347,9 @@ const Tree = React.memo(({ width, height, onNodeClick }) => {
           d.data._matches
       )
       .append("circle")
-      .attr("r", (d) => (d.depth === 0 ? 14 : 12))
+      .attr("r", (d) => (d.depth === 0 ? 16 : 14))
       .attr("fill", "none")
-      .attr("stroke", (d) =>
-        common.getLighterColorFromUuid(
-          findTopLevelParentId(data, d.data.id),
-          15
-        )
-      )
+      .attr("stroke", (d) => common.getLighterColor(primaryColor, 5))
       .attr("stroke-width", 2);
 
     // 레이블 렌더링

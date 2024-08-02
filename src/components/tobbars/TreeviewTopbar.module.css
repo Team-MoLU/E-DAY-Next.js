@@ -1,0 +1,83 @@
+.topbar {
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.leftItems {
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  margin-right: 20px;
+}
+
+.text {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.rightItems {
+  display: flex;
+  align-items: center;
+}
+
+.buttonWrapper {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: #f2f3fa;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #2e3038;
+}
+
+.toggleButton {
+  composes: button;
+}
+
+.toggleButton.active {
+  background-color: var(--primary-color);
+  border-radius: 4px;
+}
+
+.hintText {
+  visibility: hidden;
+  width: max-content;
+  background-color: #1d1d1d;
+  color: white;
+  text-align: center;
+  border-radius: 5px;
+  padding: 5px 10px;
+  position: absolute;
+  z-index: 1;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 10px; /* 버튼과의 간격 */
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s;
+  white-space: nowrap;
+}
+
+.buttonWrapper:hover .hintText {
+  visibility: visible;
+  opacity: 1;
+}

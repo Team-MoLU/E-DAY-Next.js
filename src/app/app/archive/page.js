@@ -13,6 +13,7 @@ import Sidebar from "../../../components/Sidebar";
 import "react-datepicker/dist/react-datepicker.css";
 import { DraggableTask } from "../../../components/DraggableTask";
 import { useDrop } from "react-dnd";
+import { setMenu } from "@/redux/reducers/menuSlice";
 
 export default function ArchivePage() {
   // task data 관련
@@ -25,6 +26,10 @@ export default function ArchivePage() {
   const [path, setPath] = useState(
     selectedArchive === null ? [] : selectedArchive.path
   );
+
+  useEffect(() => {
+    dispatch(setMenu("archive"));
+  }, []);
 
   // data 변경 시, currentTask refresh
   useEffect(() => {

@@ -17,6 +17,7 @@ const uiSlice = createSlice({
       isResizing: false,
     },
     treeFilter: {
+      isOpen: true,
       searchTerm: "",
       selectedRoots: [],
       showRootsWithChildren: true,
@@ -60,6 +61,9 @@ const uiSlice = createSlice({
       }
       state.treeFilter = { ...state.treeFilter, ...newFilter };
     },
+    toggleTreeFilter: (state) => {
+      state.treeFilter.isOpen = !state.treeFilter.isOpen;
+    },
   },
 });
 
@@ -69,5 +73,6 @@ export const {
   setSidebarWidth,
   setIsResizing,
   setTreeFilter,
+  toggleTreeFilter,
 } = uiSlice.actions;
 export default uiSlice.reducer;

@@ -4,6 +4,7 @@ import taskReducer from "../redux/reducers/taskSlice"; // taskSlice.js에서 exp
 import uiReducer from "./reducers/uiSlice";
 import themeReducer from "./reducers/themeSlice";
 import menuReducer from "./reducers/menuSlice";
+import calendarTasksReducer from "./reducers/calendarTasksSlice";
 
 const store = configureStore({
   reducer: {

@@ -5,9 +5,9 @@ import axios from 'axios';
 const DOMAIN_URI = process.env.NEXT_PUBLIC_DOMAIN_URI;
 
 const initialState = {
-  root:{},
-  trash:{},
-  archive:{}
+  root:{"id":"root", "name":"root", "children":[]},
+  trash:{"id":"trash", "name":"trash", "children":[]},
+  archive:{"id":"archive", "name":"archive", "children":[]}
 };
 
 export const initTasks = createAsyncThunk(
@@ -103,39 +103,6 @@ const addTaskAtPath = (state, path, newTask) => {
   }
   if (!current.children) current.children = [];
   current.children.push(newTask);
-
-  let taskDto = {
-      "parentId":"",
-      "name":"",
-      "memo":"",
-      "startDate":"",
-      "endDate":"",
-      "priority": 1
-    };
-
-  if(current.id == "root"){
-    taskDto.parentId = "0";
-  }else{
-    taskDto.parentId = current.id;
-  }
-
-  taskDto.name = newTask.name;
-  taskDto.memo = newTask.memo;
-  taskDto.startDate = newTask.startDate;
-  taskDto.endDate = newTask.endDate;
-  taskDto.priority = newTask.priority;
-
-  axios.post(`${DOMAIN_URI}/api/v1/tasks`, 
-    taskDto,
-    { "Content-Type": "application/json", withCredentials: true },
-    ).then((res) => {
-      console.log(res);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-
-  console.log(">>>>>>>>>>ADD TASK>>>>>>>>>>");
 };
 
 const deleteTaskAtPath = (state, path) => {
@@ -154,23 +121,6 @@ const deleteTaskAtPath = (state, path) => {
   if (parent && indexToDelete !== null) {
     parent.children.splice(indexToDelete, 1);
   }
-
-  let taskDto ={
-    "taskId":"",
-    "cascade":true
-  };
-
-  taskDto.taskId = current.id;
-
-  axios.post(`${DOMAIN_URI}/api/v1/tasks/delete`, 
-    taskDto,
-    { "Content-Type": "application/json", withCredentials: true },
-    ).then((res) => {
-      console.log(res);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
 };
 
 const orderChildren = (children, fromIndex, toIndex) => {
@@ -229,6 +179,37 @@ const taskSlice = createSlice({
       const { section, path, newTask } = action.payload;
       if (state[section]) {
         addTaskAtPath(state[section], path, newTask);
+
+        let taskDto = {
+          "parentId":"",
+          "name":"",
+          "memo":"",
+          "startDate":"",
+          "endDate":"",
+          "priority": 1
+        };
+    
+        if(state[section].id == "root"){
+          taskDto.parentId = "0";
+        }else{
+          taskDto.parentId = state[section].id;
+        }
+      
+        taskDto.name = newTask.name;
+        taskDto.memo = newTask.memo;
+        taskDto.startDate = newTask.startDate;
+        taskDto.endDate = newTask.endDate;
+        taskDto.priority = newTask.priority;
+      
+        axios.post(`${DOMAIN_URI}/api/v1/tasks`, 
+          taskDto,
+          { "Content-Type": "application/json", withCredentials: true },
+          ).then((res) => {
+            console.log(res);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       }
     },
     // tash 속성 update
@@ -245,6 +226,23 @@ const taskSlice = createSlice({
         const taskToDelete = getTaskByPath(state[section], path);
         addTaskAtPath(state.trash, [], taskToDelete); // Add to trash
         deleteTaskAtPath(state[section], path); // Delete from original location
+
+        let taskDto ={
+          "taskId":"",
+          "cascade":true
+        };
+      
+        taskDto.taskId = taskToDelete.id;
+      
+        axios.post(`${DOMAIN_URI}/api/v1/tasks/delete`, 
+          taskDto,
+          { "Content-Type": "application/json", withCredentials: true },
+          ).then((res) => {
+            console.log(res);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       }
     },
     // 영구적으로 task를 삭제

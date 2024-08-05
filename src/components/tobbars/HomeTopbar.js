@@ -80,7 +80,12 @@ export const HomeTopbar = () => {
   };
 
   return (
-    <div className={styles.topbar}>
+    <div
+      className={styles.topbar}
+      style={{
+        width: sidebarIsOpen ? `calc(100% - ${sidebarWidth}px)` : "100%",
+      }}
+    >
       {activeContent === "home" && (
         <div className={styles.leftItems}>
           <div className={styles.icon}>

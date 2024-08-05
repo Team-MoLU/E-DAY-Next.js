@@ -176,12 +176,18 @@ button:hover {
 }
 
 .top-bar {
+  flex-grow: 1;
+  flex-shrink: 0;
+  min-width: 300px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: row;
+  z-index: 2;
+
   height: 60px;
   background-color: #4d4f57;
   color: #f2f3fa;
-  display: flex;
   align-items: center;
-  width: 100%;
 }
 
 .title {

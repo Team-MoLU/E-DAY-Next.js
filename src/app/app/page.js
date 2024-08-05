@@ -203,7 +203,14 @@ export default function HomePage() {
             </ul>
             <div className="pt-40"></div>
             {/* 새로운 할 일 추가 UI */}
-            <div className="inputSection">
+            <div
+              className="inputSection"
+              style={{
+                right: sidebarIsOpen
+                  ? `calc(40px + ${sidebarWidth}px)`
+                  : "40px",
+              }}
+            >
               <form onSubmit={handleAddTask} className="form">
                 <input
                   type="text"

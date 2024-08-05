@@ -39,7 +39,9 @@ const uiSlice = createSlice({
       state.sidebar.activeContent = action.payload;
     },
     setSidebarWidth: (state, action) => {
-      state.sidebar.width = action.payload;
+      if (window.innerWidth - action.payload >= 650) {
+        state.sidebar.width = action.payload;
+      }
     },
     setIsResizing: (state, action) => {
       state.sidebar.isResizing = action.payload;

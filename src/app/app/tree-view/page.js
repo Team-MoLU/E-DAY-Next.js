@@ -15,7 +15,7 @@ export default function TreeViewPage() {
 
   useEffect(() => {
     dispatch(setMenu("tree-view"));
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const updateSize = () => {
@@ -52,10 +52,11 @@ export default function TreeViewPage() {
     <div
       style={{
         width: "100%",
-        height: "95vh",
+        height: "100%",
         display: "flex",
+        paddingTop: "60px",
         flexDirection: "column",
-        overflow: "hidden",
+        overflow: "none",
         position: "relative",
       }}
     >
@@ -67,7 +68,7 @@ export default function TreeViewPage() {
           left: 0,
           right: 0,
           bottom: 0,
-          overflow: "hidden",
+          overflow: "none",
         }}
         onContextMenu={handleContextMenu}
       >
@@ -79,21 +80,7 @@ export default function TreeViewPage() {
           />
         )}
       </div>
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          padding: "20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          zIndex: 10,
-        }}
-      >
-        <TreeFilter />
-      </div>
+      <TreeFilter />
     </div>
   );
 }

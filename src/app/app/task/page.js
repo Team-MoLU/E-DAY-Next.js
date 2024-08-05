@@ -19,6 +19,7 @@ import common from "@/lib/common/common_fn";
 import { setMenu, setSearchString } from "@/redux/reducers/menuSlice";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Icon from "../../../components/Icon";
 
 export default function TaskPage() {
   // task data 관련
@@ -43,6 +44,7 @@ export default function TaskPage() {
   const [childList, setChildList] = useState(
     selectedTask === null ? data.children : selectedTask.children
   );
+  const primaryColor = useSelector((state) => state.theme.primaryColor);
 
   // Topbar의 menu 설정
   useEffect(() => {
@@ -451,33 +453,57 @@ export default function TaskPage() {
           )}
           {!isSearching && (
             <div>
-              {/* 삭제 버튼 */}
-              {currentTask.name !== "root" && (
-                <button onClick={handleDeleteTask}>삭제</button>
-              )}
-              {/* 아카이빙 버튼 */}
-              {currentTask.name !== "root" && (
-                <button onClick={handleArchiveTask}>아카이빙</button>
-              )}
               <div>
                 {/* 현재 Task의 이름 */}
                 {currentTask.name === "root" ? (
-                  <h2>{currentTask.name}</h2>
+                  <h2 className="title">할 일</h2>
                 ) : (
-                  <>
-                    <input
-                      type="checkbox"
-                      checked={currentTask.check}
-                      onChange={toggleCurrentTaskCheck}
-                    />
-                    <input
-                      type="text"
-                      name="name"
-                      value={currentTask.name}
-                      onChange={handleInputChange}
-                      onBlur={handleNameInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
-                    />
-                  </>
+                  <div className="titleSection">
+                    <div className="task-leftItem">
+                      <button
+                        className="toggleButton"
+                        onDoubleClick={(e) => e.stopPropagation()}
+                        onClick={() => toggleCurrentTaskCheck()}
+                      >
+                        {currentTask.check === true ? (
+                          <Icon name="check" size={32} color={primaryColor} />
+                        ) : (
+                          <Icon name="uncheck" size={32} color="#2E3038" />
+                        )}
+                      </button>
+                      <input
+                        type="text"
+                        name="name"
+                        className="titleInput"
+                        value={currentTask.name}
+                        onChange={handleInputChange}
+                        onBlur={handleNameInputBlur} // 입력이 끝나면 onBlur 이벤트가 발생합니다.
+                      />
+                    </div>
+                    <div className="task-rightItem">
+                      {/* 삭제 버튼 */}
+                      {currentTask.name !== "root" && (
+                        <div className="buttonWrapper">
+                          <button onClick={handleDeleteTask} className="button">
+                            <Icon name="trash" size={28} />
+                          </button>
+                          <span className="hintText">삭제</span>
+                        </div>
+                      )}
+                      {/* 아카이빙 버튼 */}
+                      {currentTask.name !== "root" && (
+                        <div className="buttonWrapper">
+                          <button
+                            onClick={handleArchiveTask}
+                            className="button"
+                          >
+                            <Icon name="archive" size={28} />
+                          </button>
+                          <span className="hintText">아카이브</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
                 {/* 상세 */}
                 {currentTask.name !== "root" && (
@@ -538,7 +564,7 @@ export default function TaskPage() {
                       onDoubleClick={() => {
                         handleSubtaskDoubleClick(task, [...path, index]);
                       }}
-                      onCheckChange={(e) => {
+                      onCheckChange={() => {
                         toggleSubTaskCheck(index);
                       }}
                       index={index} // 현재 인덱스 전달
@@ -547,15 +573,27 @@ export default function TaskPage() {
                   ))}
                 </ul>
                 {/* 새로운 할 일 추가 UI */}
-                <form onSubmit={handleAddTask}>
-                  <input
-                    type="text"
-                    value={newTaskName}
-                    onChange={(e) => setNewTaskName(e.target.value)}
-                    placeholder="새로운 할 일"
-                  />
-                  <button type="submit">추가</button>
-                </form>
+                <div
+                  className="inputSection"
+                  style={{
+                    right: sidebarIsOpen
+                      ? `calc(40px + ${sidebarWidth}px)`
+                      : "40px",
+                  }}
+                >
+                  <form onSubmit={handleAddTask} className="form">
+                    <input
+                      type="text"
+                      value={newTaskName}
+                      className="inputField"
+                      onChange={(e) => setNewTaskName(e.target.value)}
+                      placeholder="할 일을 입력하세요"
+                    />
+                    <button type="submit" className="addButton">
+                      <Icon name="add" size={24} />
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           )}

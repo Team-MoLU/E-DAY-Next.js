@@ -2,7 +2,6 @@ import React, { useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { startResizing, stopResizing, resize } from "@/redux/actions/uiAction";
 import { toggleSidebar } from "@/redux/reducers/uiSlice";
-import TaskDetailSidebar from "./sidebars/TaskDetailSidebar";
 import ArchiveDetailSidebar from "./sidebars/ArchiveDetailSidebar";
 import { Explore } from "./Explore";
 
@@ -46,8 +45,6 @@ const Sidebar = () => {
 
   const renderContent = () => {
     switch (activeContent) {
-      case "taskDetail":
-        return <TaskDetailSidebar />;
       case "taskDetailReadOnly":
         return <ArchiveDetailSidebar />;
       case "explore":

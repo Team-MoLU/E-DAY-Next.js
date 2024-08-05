@@ -1,0 +1,54 @@
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 20px;
+}
+
+.input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #4a4a4a;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.knob {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 4px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+.input:checked + .slider .knob {
+  transform: translateX(11px);
+}
+
+/* 애니메이션 효과 */
+.slider,
+.knob {
+  transition: all 0.4s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+}
+
+.slider.on {
+  box-shadow: 0 0 px var(--primary-color);
+}

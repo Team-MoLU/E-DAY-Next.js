@@ -1,0 +1,187 @@
+.container {
+  position: relative;
+}
+
+.filterPanel {
+  position: fixed;
+  right: 20px;
+  background-color: #383a41;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  width: 280px;
+  z-index: 50;
+  transition: all 0.3s ease-in-out;
+  color: white;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.refreshButton {
+  padding: 4px;
+  background-color: transparent;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.refreshButton:hover {
+  background-color: #2e3038;
+}
+
+.hintText {
+  visibility: hidden;
+  width: max-content;
+  background-color: #1d1d1d;
+  color: white;
+  text-align: center;
+  border-radius: 5px;
+  padding: 5px 10px;
+  position: absolute;
+  z-index: 1;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 10px; /* 버튼과의 간격 */
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s;
+  white-space: nowrap;
+}
+
+.refreshButton:hover .hintText {
+  visibility: visible;
+  opacity: 1;
+}
+
+.searchSection {
+  display: flex;
+  align-items: center;
+  background-color: #2a2a2a;
+  border-radius: 20px;
+  padding: 8px 12px;
+  flex-grow: 1;
+  margin-right: 8px;
+}
+
+.searchIcon {
+  padding-right: 8px;
+}
+
+.section {
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rootSelectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rootSelectSection {
+  padding-top: 16px;
+}
+
+.label {
+  display: inline;
+  font-weight: 400;
+}
+
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  background-color: #383a41;
+}
+
+.searchInput {
+  flex-grow: 1;
+  background-color: #2a2a2a;
+  border: none;
+  color: white;
+  outline: none;
+  font-size: 14px;
+  padding: 8px 12px;
+  width: 90%;
+  border-radius: 50px;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+.searchInput::placeholder {
+  color: #6b7280;
+}
+
+.button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rootList {
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #2a2a2a;
+  border-radius: 5px;
+}
+
+.rootItem {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rootItem:hover {
+  background-color: #3a3a3a;
+}
+
+.rootItem.selected {
+  background-color: var(--primary-color);
+}
+
+/* 스크롤바 스타일링 */
+.rootList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rootList::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.rootList::-webkit-scrollbar-thumb {
+  background-color: #4a4a4a;
+  border-radius: 4px;
+}
+
+.rootList::-webkit-scrollbar-thumb:hover {
+  background-color: #5a5a5a;
+}

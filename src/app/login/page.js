@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+
 import Link from "next/link";
+import Image from "next/image";
+import styles from "./login.module.css";
 
 export default function LoginPage() {
   const DOMAIN_URI = process.env.NEXT_PUBLIC_DOMAIN_URI;
@@ -31,15 +34,38 @@ export default function LoginPage() {
   }, [accessToken, refreshToken]);
 
   return (
-    <div>
-      <Link href={DOMAIN_URI + "/api/v1/login/oauth2/code/google"}>
-        <button>회원가입</button>
-      </Link>
-      <br></br>
-      <br></br>
-      <Link href={DOMAIN_URI + "/api/v1/login"}>
-        <button>로그인</button>
-      </Link>
+    <div className={styles.container}>
+      <div className={styles.loginBox}>
+        <Image
+          src="/Logo.svg"
+          alt="Logo"
+          width={100}
+          height={100}
+          onContextMenu={(e) => e.preventDefault()}
+          style={{ userSelect: "none", pointerEvents: "none" }}
+        />
+        <Link href={DOMAIN_URI + "/api/v1/login"}>
+          <Image
+            src="/oauth/web_neutral_rd_ctn.svg"
+            alt="Google Login"
+            width={191}
+            height={46}
+            className={styles.googleButton}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        </Link>
+      </div>
+      <div className={styles.backgroundAnimation}>
+        <Image
+          src="/background.svg"
+          alt="background"
+          layout="fill"
+          objectFit="cover"
+          quality={100}
+          onContextMenu={(e) => e.preventDefault()}
+          style={{ userSelect: "none", pointerEvents: "none" }}
+        />
+      </div>
     </div>
   );
 }

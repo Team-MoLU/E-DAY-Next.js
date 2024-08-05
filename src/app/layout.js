@@ -1,7 +1,7 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
+import StoreProvider from "./StoreProvider";
+import DndProvider from "./DndProvider";
+import PrimaryColorSetter from "../components/PrimaryColorSetter";
 
 export const metadata = {
   title: "E-day",
@@ -11,9 +11,22 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div>{children}</div>
+    <html lang="ko">
+      <head>
+        <link
+          rel="stylesheet"
+          as="style"
+          crossOrigin="anonymous"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css"
+        />
+      </head>
+      <body className="font-pretendard">
+        <StoreProvider>
+          <DndProvider>
+            <PrimaryColorSetter />
+            {children}
+          </DndProvider>
+        </StoreProvider>
       </body>
     </html>
   );

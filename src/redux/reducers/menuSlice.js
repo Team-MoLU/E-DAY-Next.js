@@ -5,6 +5,8 @@ const menuSlice = createSlice({
   initialState: {
     activeContent: "home",
     searchString: "",
+    searchStringArchive: "",
+    searchStringTrash: "",
   },
   reducers: {
     setMenu: (state, action) => {
@@ -13,8 +15,19 @@ const menuSlice = createSlice({
     setSearchString: (state, action) => {
       state.searchString = action.payload;
     },
+    setSearchStringArchive: (state, action) => {
+      state.searchStringArchive = action.payload;
+    },
+    setSearchStringTrash: (state, action) => {
+      state.searchStringTrash = action.payload;
+    },
   },
 });
 
-export const { setMenu, setSearchString } = menuSlice.actions;
+export const {
+  setMenu,
+  setSearchString,
+  setSearchStringArchive,
+  setSearchStringTrash,
+} = menuSlice.actions;
 export default menuSlice.reducer;

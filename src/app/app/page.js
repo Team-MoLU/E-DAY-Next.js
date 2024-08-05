@@ -2,6 +2,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  initTasks,
+  selectTasksStatus,
+  selectTasksError,
   addTask,
   getTaskByPath,
   setSelectedTask,
@@ -11,17 +14,28 @@ import Sidebar from "../../components/Sidebar";
 import { v4 as uuidv4 } from "uuid";
 import { useDrop } from "react-dnd";
 import { useRouter } from "next/navigation";
+import LoadingSpinner from '../../components/LoadingSpinner';
 import { setMenu } from "@/redux/reducers/menuSlice";
 import Icon from "../../components/Icon";
 import common from "@/lib/common/common_fn";
 
 export default function HomePage() {
   // task data 관련
-  const data = useSelector((state) => state.tasks.root);
   const dispatch = useDispatch();
   const router = useRouter();
   const [newTaskName, setNewTaskName] = useState("");
   const [todayTaskList, setTodayTaskList] = useState([]);
+  const status = useSelector(selectTasksStatus);
+  const error = useSelector(selectTasksError);
+
+  useEffect(() => {
+    dispatch(initTasks({}));
+  }, [dispatch]);
+
+  const data = useSelector((state) => state.tasks.root);
+
+  console.log("data::");
+  console.log(data);
   const primaryColor = useSelector((state) => state.theme.primaryColor);
 
   useEffect(() => {
@@ -151,6 +165,14 @@ export default function HomePage() {
     }),
     [handleDrop]
   );
+
+  if (status === 'loading') {
+    return <LoadingSpinner />;
+  }
+
+  if (status === 'failed') {
+    return <div>에러: {error}</div>;
+  }
 
   // view return
   return (

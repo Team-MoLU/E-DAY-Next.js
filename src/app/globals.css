@@ -175,6 +175,54 @@ button:hover {
   background-color: var(--primary-color);
 }
 
+.buttonWrapper {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: #f2f3fa;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #2e3038;
+}
+
+.hintText {
+  visibility: hidden;
+  width: max-content;
+  background-color: #1d1d1d;
+  color: white;
+  text-align: center;
+  border-radius: 5px;
+  padding: 5px 10px;
+  position: absolute;
+  z-index: 1;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 10px; /* 버튼과의 간격 */
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s;
+  white-space: nowrap;
+}
+
+.buttonWrapper:hover .hintText {
+  visibility: visible;
+  opacity: 1;
+}
+
 .top-bar {
   flex-grow: 1;
   flex-shrink: 0;
@@ -192,6 +240,31 @@ button:hover {
 
 .title {
   padding-bottom: 10px;
+  font-size: 28px;
+  font-weight: 600;
+  color: white;
+}
+
+.titleSection {
+  padding: 2px;
+  border-radius: 20px;
+  font-size: 18px;
+  color: white;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.titleInput {
+  flex-grow: 1;
+  height: 52px;
+  background-color: #00000000;
+  border: none;
+  border-radius: 20px;
+  padding-left: 10px;
+  padding-right: 20px;
   font-size: 28px;
   font-weight: 600;
   color: white;

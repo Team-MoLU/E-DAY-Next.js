@@ -207,6 +207,9 @@ export default function ArchivePage() {
     dispatch(setSearchStringArchive(""));
   };
 
+  if (!data) return <div>Loading...</div>;
+  if (!selectedArchive) return <div>Loading...</div>;
+
   // view return
   return (
     <div className="task-page">

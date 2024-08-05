@@ -410,6 +410,9 @@ export default function TaskPage() {
     dispatch(setSearchString(""));
   };
 
+  if (!data) return <div>Loading...</div>;
+  if (!selectedTask) return <div>Loading...</div>;
+
   // view return
   return (
     <div className="task-page">

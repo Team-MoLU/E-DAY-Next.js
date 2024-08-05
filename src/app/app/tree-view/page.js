@@ -48,6 +48,8 @@ export default function TreeViewPage() {
     e.preventDefault();
   }, []);
 
+  if (!containerRef) return <div>Loading...</div>;
+
   return (
     <div
       style={{

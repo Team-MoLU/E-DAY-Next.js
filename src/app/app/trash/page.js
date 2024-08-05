@@ -208,6 +208,9 @@ export default function TrashPage() {
     dispatch(setSearchStringTrash(""));
   };
 
+  if (!data) return <div>Loading...</div>;
+  if (!selectedTrash) return <div>Loading...</div>;
+
   // view return
   return (
     <div className="task-page">

@@ -70,6 +70,9 @@ const TreeFilter = () => {
     return true;
   };
 
+  if (!filter) return <div>Loading...</div>;
+  if (!allTasks) return <div>Loading...</div>;
+
   const toggleRootSelection = (rootId) => {
     const newSelectedRoots = filter.selectedRoots.includes(rootId)
       ? filter.selectedRoots.filter((id) => id !== rootId)

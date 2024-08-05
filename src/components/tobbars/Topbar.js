@@ -2,6 +2,8 @@ import React, { useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { HomeTopbar } from "./HomeTopbar";
 import { TreeviewTopbar } from "./TreeviewTopbar";
+import { ArchiveTopbar } from "./ArchiveTopbar";
+import { TrashTopbar } from "./TrashTopbar";
 
 const Topbar = () => {
   const dispatch = useDispatch();
@@ -18,9 +20,9 @@ const Topbar = () => {
       case "calendar":
         return <h1>calendar topbar</h1>;
       case "archive":
-        return <h1>archive topbar</h1>;
+        return <ArchiveTopbar />;
       case "trash":
-        return <h1>trash topbar</h1>;
+        return <TrashTopbar />;
       case "retrospect":
         return <h1>retrospect topbar</h1>;
       case "achievement":

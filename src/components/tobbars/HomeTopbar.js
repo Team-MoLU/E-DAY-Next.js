@@ -44,6 +44,8 @@ export const HomeTopbar = () => {
   const [route, setRoute] = useState(
     selectedTask === null
       ? [{ id: "root", name: "root" }]
+      : common.findRouteById(selectedTask.id, data) === null
+      ? [{ id: "root", name: "root" }]
       : common.findRouteById(selectedTask.id, data)
   );
 
@@ -52,7 +54,11 @@ export const HomeTopbar = () => {
     const currentTaskId = selectedTask === null ? "root" : selectedTask.id;
     // route update
     const newRoute = common.findRouteById(currentTaskId, data);
-    setRoute(newRoute);
+    if (newRoute === null) {
+      setRoute([{ id: "root", name: "root" }]);
+    } else {
+      setRoute(newRoute);
+    }
   }, [data]);
 
   // selectedTask 변경 시,
@@ -60,8 +66,11 @@ export const HomeTopbar = () => {
     const currentTaskId = selectedTask === null ? "root" : selectedTask.id;
     // route update
     const newRoute = common.findRouteById(currentTaskId, data);
-    setRoute(newRoute);
-
+    if (newRoute === null) {
+      setRoute([{ id: "root", name: "root" }]);
+    } else {
+      setRoute(newRoute);
+    }
     // 이동하면 search 끄기
     setIsSearching(false);
   }, [selectedTask]);
@@ -75,6 +84,7 @@ export const HomeTopbar = () => {
 
   const toggleSearching = () => {
     setIsSearching(!isSearching);
+    dispatch(setSearchString(""));
   };
 
   return (

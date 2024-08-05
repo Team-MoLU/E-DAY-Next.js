@@ -1,32 +1,60 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  dropTask,
+  deleteTask,
   getTaskByPath,
+  setSelectedTrashTask,
+  moveTask,
   restoreTask,
+  dropTask,
 } from "@/redux/reducers/taskSlice";
-import { setMenu } from "@/redux/reducers/menuSlice";
+import Sidebar from "../../../components/Sidebar";
+import "react-datepicker/dist/react-datepicker.css";
+import { DraggableTask } from "../../../components/DraggableTask";
+import { useDrop } from "react-dnd";
+import { setMenu, setSearchStringTrash } from "@/redux/reducers/menuSlice";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function TrashPage() {
   // task data 관련
   const data = useSelector((state) => state.tasks.trash);
+  const selectedTrash = useSelector((state) => state.tasks.selectedTrash);
   const dispatch = useDispatch();
-  const [currentTask, setCurrentTask] = useState(data);
-  const [path, setPath] = useState([]);
+  const [currentTask, setCurrentTask] = useState(
+    selectedTrash === null ? data : selectedTrash
+  );
+  const [path, setPath] = useState(
+    selectedTrash === null ? [] : selectedTrash.path
+  );
 
+  // Topbar의 menu 설정
   useEffect(() => {
     dispatch(setMenu("trash"));
   }, []);
 
+  // data 변경 시, currentTask refresh
   useEffect(() => {
     setCurrentTask(getTaskByPath(data, path));
-  }, [data]);
+  }, [data, path]);
+
+  // selectedTrash 변경 시,
+  useEffect(() => {
+    const newPath = selectedTrash === null ? [] : selectedTrash.path;
+    setPath(newPath);
+  }, [selectedTrash]);
 
   /**
    * 현재 task를 삭제(cascade)하고, 부모 task로 이동하는 함수
    */
   const handleDropTask = () => {
+    // currentTask를 부모 Task로 변경
+    const newPath = path.slice(0, -1);
+    setPath(newPath);
+    const newCurrentTask = getTaskByPath(data, newPath);
+    setCurrentTask(newCurrentTask);
+    dispatch(setSelectedTrashTask({ ...newCurrentTask, path: newPath }));
     // dispatch 통해서 현재 node 삭제
     dispatch(
       dropTask({
@@ -34,195 +62,279 @@ export default function TrashPage() {
         path: path,
       })
     );
-    // currentTask를 부모 Task로 변경
-    const newPath = path.slice(0, -1);
-    setPath(newPath);
-    setCurrentTask(getTaskByPath(data, newPath));
+  };
+
+  /**
+   * subtask 를 더블클릭했을 때, 해당 task의 하위로 이동하는 함수
+   * @param {*} subtask
+   * @param {*} subtaskPath
+   */
+  const handleSubtaskDoubleClick = (subtask, subtaskPath) => {
+    dispatch(setSelectedTrashTask({ ...subtask, path: subtaskPath }));
+    setPath(subtaskPath);
   };
 
   /**
    * 현재 task를 trash에서 root 의 하위로 복구하고, 부모 task로 이동하는 함수
    */
   const handleRestoreTask = () => {
+    // currentTask를 부모 Task로 변경
+    const newPath = path.slice(0, -1);
+    setPath(newPath);
+    const newCurrentTask = getTaskByPath(data, newPath);
+    setCurrentTask(newCurrentTask);
+    dispatch(setSelectedTrashTask({ ...newCurrentTask, path: newPath }));
     // dispatch 통해서 현재 node 삭제
     dispatch(
       restoreTask({
         path: path,
       })
     );
-    // currentTask를 부모 Task로 변경
-    const newPath = path.slice(0, -1);
-    setPath(newPath);
-    setCurrentTask(getTaskByPath(data, newPath));
   };
 
   // sidebar 관련
-  const sidebarRef = useRef(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [mainViewWidth, setMainViewWidth] = useState(650);
+  const {
+    isOpen: sidebarIsOpen,
+    activeContent: sidebarActiveContent,
+    width: sidebarWidth,
+  } = useSelector((state) => state.ui.sidebar);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-    setMainViewWidth(650);
-  };
-
-  const startResizing = useCallback((mouseDownEvent) => {
-    setIsResizing(true);
-  }, []);
-
-  const stopResizing = useCallback(() => {
-    setIsResizing(false);
-  }, []);
-
-  const resize = useCallback(
-    (mouseMoveEvent) => {
-      if (isResizing) {
-        const newMainViewWidth =
-          mouseMoveEvent.clientX -
-          sidebarRef.current.getBoundingClientRect().left;
-        if (newMainViewWidth / window.innerWidth >= 0.78) {
-          setIsSidebarOpen(false);
+  // Drag and Drop 관련
+  const handleDropFromExplore = useCallback(
+    (item) => {
+      if (item.section === data.name) {
+        // 경로가 동일한 경우
+        if (JSON.stringify(item.path) === JSON.stringify(path)) {
+          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+          return;
         }
-        setMainViewWidth(newMainViewWidth);
+        // item.path가 path의 상위 경로인 경우 (path가 item.path의 하위 경로인 경우)
+        if (
+          path.length > item.path.length &&
+          JSON.stringify(item.path) ===
+            JSON.stringify(path.slice(0, item.path.length))
+        ) {
+          alert("현재 위치의 하위 경로로는 이동할 수 없습니다.");
+          return;
+        }
       }
+      dispatch(
+        moveTask({
+          fromSection: item.section,
+          fromPath: item.path,
+          toSection: data.name,
+          toPath: path,
+        })
+      );
     },
-    [isResizing]
+    [path, data.name]
+  ); // path와 data.name을 의존성 배열에 추가
+
+  const [, dropFromExplore] = useDrop(
+    () => ({
+      accept: "ExploreItem",
+      drop: handleDropFromExplore,
+    }),
+    [handleDropFromExplore]
+  ); // handleDrop을 의존성 배열에 추가
+
+  // 검색 관련
+  const searchStringTrash = useSelector(
+    (state) => state.menu.searchStringTrash
   );
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchedTaskList, setSearchedTaskList] = useState([]);
 
   useEffect(() => {
-    window.addEventListener("mousemove", resize);
-    window.addEventListener("mouseup", stopResizing);
-    return () => {
-      window.removeEventListener("mousemove", resize);
-      window.removeEventListener("mouseup", stopResizing);
-    };
-  }, [resize, stopResizing]);
+    if (searchStringTrash === "") {
+      setIsSearching(false);
+      setSearchedTaskList([]);
+    } else {
+      setIsSearching(true);
+      const result = searchTasks(currentTask, searchStringTrash);
+      setSearchedTaskList(result);
+    }
+  }, [searchStringTrash, currentTask]);
+
+  // 검색어 필터링
+  const matchesSearchString = (name, searchStringTrash) => {
+    return name
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .includes(searchStringTrash.toLowerCase().replace(/\s+/g, ""));
+  };
+
+  // 재귀적으로 작업 목록을 검색하는 함수
+  const searchTasks = (task, searchString, currentTaskPath = [], path = []) => {
+    const result = [];
+
+    // 현재 작업이 검색 문자열을 포함하면 결과에 추가
+    if (matchesSearchString(task.name, searchString)) {
+      const foundTask = {
+        ...task,
+        path: currentTaskPath.concat(path),
+      };
+      result.push(foundTask);
+    }
+
+    // 자식 작업이 있으면 재귀적으로 검색
+    if (task.children && task.children.length > 0) {
+      task.children.forEach((child, index) => {
+        result.push(
+          ...searchTasks(
+            child,
+            searchString,
+            currentTaskPath,
+            path.concat(index)
+          )
+        );
+      });
+    }
+
+    return result;
+  };
+
+  /**
+   * searched task 를 더블클릭했을 때, 해당 task의 리스트뷰로 이동하는 함수
+   * @param {*} task
+   */
+  const handleSearchedTaskDoubleClick = (task) => {
+    dispatch(setSelectedTrashTask(task));
+    let { path, ...newCurrentTask } = task;
+
+    setCurrentTask(newCurrentTask);
+    setPath(path);
+
+    dispatch(setSearchStringTrash(""));
+  };
 
   // view return
   return (
     <div className="task-page">
       <div
-        ref={sidebarRef}
+        ref={dropFromExplore}
         className="main-view"
         style={{
-          width: isSidebarOpen ? mainViewWidth : "100%",
+          width: sidebarIsOpen ? `calc(100% - ${sidebarWidth}px)` : "100%",
         }}
       >
         <div className="main-view-content">
-          {/* 상세 버튼 */}
-          <button onClick={toggleSidebar}>
-            {isSidebarOpen ? "상세 끄기" : "상세 보기"}
-          </button>
-          {/* 영구 삭제 버튼 */}
-          {currentTask.name !== "trash" && (
-            <button onClick={handleDropTask}>영구 삭제</button>
-          )}
-          {/* 복구 버튼 */}
-          {currentTask.name !== "trash" && (
-            <button onClick={handleRestoreTask}>복구</button>
-          )}
-          <div>
-            {/* 경로 */}
+          {isSearching && (
             <div>
-              <span>경로: </span>
-              <span
-                style={{ cursor: "pointer", color: "blue" }}
-                onClick={() => {
-                  setCurrentTask(data);
-                  setPath([]);
-                }}
-              >
-                {data.name}
-              </span>
-              {path.map((p, index) => (
-                <span key={"p" + index}>
-                  {" / "}
-                  <span
-                    style={{ cursor: "pointer", color: "blue" }}
-                    onClick={() => {
-                      setCurrentTask(
-                        getTaskByPath(data, path.slice(0, index + 1))
-                      );
-                      setPath(path.slice(0, index + 1));
+              <h3>검색 결과:</h3>
+              {/* 검색 결과의 List */}
+              <ul>
+                {searchedTaskList.map((task, index) => (
+                  <li
+                    key={"search" + index}
+                    className="task-item"
+                    onDoubleClick={() => {
+                      handleSearchedTaskDoubleClick(task);
                     }}
                   >
-                    {getTaskByPath(data, path.slice(0, index + 1)).name}
-                  </span>
-                </span>
-              ))}
+                    <input
+                      type="checkbox"
+                      checked={task.check}
+                      onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={(e) => e.stopPropagation()}
+                      onChange={() => {}}
+                    />
+                    <span>
+                      {task.name} (Path: {task.path.join(" > ")})
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            {/* 현재 Task의 이름 */}
-            {currentTask.name === "trash" ? (
-              <h2>{currentTask.name}</h2>
-            ) : (
-              <>
-                <input type="checkbox" checked={currentTask.check} readOnly />
-                <span>{currentTask.name}</span>
-              </>
-            )}
-            {/* 하위 Task의 List */}
-            <ul>
-              {currentTask.children.map((task, index) => (
-                <li
-                  key={index}
-                  className="task-item"
-                  onClick={() => {
-                    setCurrentTask(currentTask.children[index]);
-                    setPath([...path, index]);
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={task.check}
-                    onClick={(e) => e.stopPropagation()} // 체크박스 클릭 시 이벤트 전파 막기
-                    readOnly
-                  />
-                  <span>{task.name}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          )}
+          {!isSearching && (
+            <div>
+              {/* 삭제 버튼 */}
+              {currentTask.name !== "trash" && (
+                <button onClick={handleDropTask}>영구 삭제</button>
+              )}
+              {/* 복구 버튼 */}
+              {currentTask.name !== "trash" && (
+                <button onClick={handleRestoreTask}>복구</button>
+              )}
+              <div>
+                {/* 현재 Task의 이름 */}
+                {currentTask.name === "trash" ? (
+                  <h2>{currentTask.name}</h2>
+                ) : (
+                  <>
+                    <input
+                      type="checkbox"
+                      checked={currentTask.check}
+                      onChange={() => {}}
+                    />
+                    {currentTask.name}
+                  </>
+                )}
+                {/* 상세 */}
+                {currentTask.name !== "trash" && (
+                  <>
+                    <div>
+                      <label>Priority:</label>
+                      <span
+                        style={{
+                          textDecoration: "underline",
+                        }}
+                      >
+                        {currentTask.priority}
+                      </span>
+                    </div>
+                    <div>
+                      <label>Date Range:</label>
+                      <DatePicker
+                        selectsRange={true}
+                        startDate={
+                          currentTask.startDate
+                            ? new Date(currentTask.startDate)
+                            : null
+                        }
+                        endDate={
+                          currentTask.endDate
+                            ? new Date(currentTask.endDate)
+                            : null
+                        }
+                        dateFormat="yyyy-MM-dd"
+                        isClearable
+                        readOnly
+                        timeZone="UTC"
+                      />
+                    </div>
+                    <div>
+                      <label>Memo:</label>
+                      <textarea name="memo" value={currentTask.memo} readOnly />
+                    </div>
+                  </>
+                )}
+                {/* 하위 Task의 List */}
+                <ul>
+                  {currentTask.children.map((task, index) => (
+                    <DraggableTask
+                      key={index}
+                      type={"TaskPageItem"}
+                      task={task}
+                      section={data.name}
+                      path={[...path, index]}
+                      parentPath={path}
+                      onDoubleClick={() => {
+                        handleSubtaskDoubleClick(task, [...path, index]);
+                      }}
+                      onCheckChange={() => {}}
+                      index={index}
+                      orderTask={() => {}}
+                    />
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
-        {isSidebarOpen && (
-          <div className="main-sub-view-resizer" onMouseDown={startResizing} />
-        )}
       </div>
-      {isSidebarOpen && (
-        <div
-          className="sub-view"
-          style={{ width: `calc(100% - ${mainViewWidth}px)` }}
-        >
-          <h1>sub 페이지</h1>
-          <TaskDetail task={currentTask} />
-        </div>
-      )}
+      {sidebarIsOpen && <Sidebar />}
     </div>
   );
 }
-
-const TaskDetail = ({ task }) => {
-  return task.name === "trash" ? (
-    <h1>trash는 상세가 없어요</h1>
-  ) : (
-    <div className="task-detail">
-      <h1>상세</h1>
-      <div className="task-detail-item">
-        <strong>Name:</strong> <span>{task.name || "Not set"}</span>
-      </div>
-      <div className="task-detail-item">
-        <strong>Start Date:</strong> <span>{task.startDate || "Not set"}</span>
-      </div>
-      <div className="task-detail-item">
-        <strong>End Date:</strong> <span>{task.endDate || "Not set"}</span>
-      </div>
-      <div className="task-detail-item">
-        <strong>Priority:</strong> <span>{task.priority || "Not set"}</span>
-      </div>
-      <div className="task-detail-item">
-        <strong>Memo:</strong>
-        <textarea name="memo" value={task.memo} />
-      </div>
-    </div>
-  );
-};

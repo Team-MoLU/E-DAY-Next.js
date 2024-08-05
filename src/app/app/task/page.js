@@ -52,11 +52,15 @@ export default function TaskPage() {
   // data 변경 시,
   useEffect(() => {
     const newPath = common.findNodePathById(currentTaskId, data);
-    setPath(newPath);
-    const updatedCurrentTask = getTaskByPath(data, newPath);
-    setCurrentTask(updatedCurrentTask);
-    // childList update
-    setChildList(updatedCurrentTask.children);
+    if (newPath === null) {
+      setCurrentTaskId("root");
+    } else {
+      setPath(newPath);
+      const updatedCurrentTask = getTaskByPath(data, newPath);
+      setCurrentTask(updatedCurrentTask);
+      // childList update
+      setChildList(updatedCurrentTask.children);
+    }
   }, [data]);
 
   // selectedTask 변경 시,
@@ -69,17 +73,23 @@ export default function TaskPage() {
   useEffect(() => {
     // path update
     const newPath = common.findNodePathById(currentTaskId, data);
-    setPath(newPath);
-    // currentTask update
-    const updatedCurrentTask = getTaskByPath(data, newPath);
-    setCurrentTask(updatedCurrentTask);
-    // route update
-    const newRoute = common.findRouteById(currentTaskId, data);
-    setRoute(newRoute);
-    // selectedTask update
-    dispatch(setSelectedTask({ ...updatedCurrentTask, path: newPath }));
-    // childList update
-    setChildList(updatedCurrentTask.children);
+    if (newPath === null) {
+      setPath([]);
+      setRoute([{ id: "root", name: "root" }]);
+      dispatch(setSelectedTask(null));
+    } else {
+      setPath(newPath);
+      // currentTask update
+      const updatedCurrentTask = getTaskByPath(data, newPath);
+      setCurrentTask(updatedCurrentTask);
+      // route update
+      const newRoute = common.findRouteById(currentTaskId, data);
+      setRoute(newRoute);
+      // selectedTask update
+      dispatch(setSelectedTask({ ...updatedCurrentTask, path: newPath }));
+      // childList update
+      setChildList(updatedCurrentTask.children);
+    }
   }, [currentTaskId]);
 
   const handleInputChange = (e) => {

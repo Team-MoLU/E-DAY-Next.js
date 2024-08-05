@@ -1,6 +1,8 @@
 "use client";
 import common from "@/lib/common/common_fn";
+import Icon from "../components/Icon";
 import { useDrag, useDrop } from "react-dnd";
+import { Provider, useSelector, useDispatch } from "react-redux";
 
 export const DraggableTask = ({
   type,
@@ -14,6 +16,8 @@ export const DraggableTask = ({
   index,
   orderTask,
 }) => {
+  const primaryColor = useSelector((state) => state.theme.primaryColor);
+
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: type,
@@ -46,14 +50,20 @@ export const DraggableTask = ({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
     >
-      <input
-        type="checkbox"
-        checked={task.check}
-        onClick={(e) => e.stopPropagation()}
-        onDoubleClick={(e) => e.stopPropagation()}
-        onChange={onCheckChange}
-      />
-      <span>{task.name}</span>
+      <div className="task-leftItem">
+        <button
+          className="toggleButton"
+          onDoubleClick={(e) => e.stopPropagation()}
+          onClick={() => onCheckChange()}
+        >
+          {task.check === true ? (
+            <Icon name="check" size={28} color={primaryColor} />
+          ) : (
+            <Icon name="uncheck" size={28} color="#585D6A" />
+          )}
+        </button>
+        <span>{task.name}</span>
+      </div>
     </li>
   );
 };

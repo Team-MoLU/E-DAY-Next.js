@@ -79,14 +79,33 @@
 /* 기존의 다른 스타일들은 그대로 유지 */
 .task-item {
   cursor: pointer;
-  padding: 8px;
-  margin-bottom: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 2px;
+  background-color: #383a41;
+  border-radius: 20px;
+  font-size: 18px;
+  color: white;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.task-leftItem {
+  display: flex;
+  align-items: center;
+}
+
+.task-rightItem {
+  display: flex;
+  align-items: center;
+  padding-right: 20px;
+  color: #e2e2e2;
+  font-size: 14px;
 }
 
 .task-item:hover {
-  background-color: #aaaaaa;
+  background-color: #2e3038;
 }
 
 .task-page {
@@ -102,9 +121,10 @@
   min-width: 300px;
   max-width: 100%;
   display: flex;
-  border: #cdcdcd 1px solid;
   flex-direction: row;
-  background: #ffffff;
+  padding-top: 70px;
+  padding-left: 20px;
+  padding-right: 20px;
   z-index: 2;
 }
 
@@ -155,11 +175,148 @@ button:hover {
   background-color: var(--primary-color);
 }
 
+.buttonWrapper {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: #f2f3fa;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #2e3038;
+}
+
+.hintText {
+  visibility: hidden;
+  width: max-content;
+  background-color: #1d1d1d;
+  color: white;
+  text-align: center;
+  border-radius: 5px;
+  padding: 5px 10px;
+  position: absolute;
+  z-index: 1;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 10px; /* 버튼과의 간격 */
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s;
+  white-space: nowrap;
+}
+
+.buttonWrapper:hover .hintText {
+  visibility: visible;
+  opacity: 1;
+}
+
 .top-bar {
+  flex-grow: 1;
+  flex-shrink: 0;
+  min-width: 300px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: row;
+  z-index: 2;
+
   height: 60px;
   background-color: #4d4f57;
   color: #f2f3fa;
+  align-items: center;
+}
+
+.title {
+  padding-bottom: 10px;
+  font-size: 28px;
+  font-weight: 600;
+  color: white;
+}
+
+.titleSection {
+  padding: 2px;
+  border-radius: 20px;
+  font-size: 18px;
+  color: white;
   display: flex;
   align-items: center;
+  text-align: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.titleInput {
+  flex-grow: 1;
+  height: 52px;
+  background-color: #00000000;
+  border: none;
+  border-radius: 20px;
+  padding-left: 10px;
+  padding-right: 20px;
+  font-size: 28px;
+  font-weight: 600;
+  color: white;
+}
+
+.inputSection {
+  position: fixed;
+  left: 280px;
+  right: 40px;
+  bottom: 20px;
+  background-color: #383a41;
+  padding: 5px;
+  border-radius: 24px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2);
+}
+
+.form {
+  display: flex;
+  align-items: center;
+}
+
+.inputField {
+  flex-grow: 1;
+  height: 52px;
   width: 100%;
+  background-color: #383a41;
+  border: none;
+  border-radius: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-right: 10px;
+  color: white;
+}
+
+.addButton {
+  color: #f2f3fa;
+  border: none;
+  border-radius: 14px;
+  padding: 8px 12px;
+  cursor: pointer;
+  height: 52px;
+  background-color: #383a41;
+}
+
+.addButton:hover {
+  background-color: var(--primary-color);
+}
+
+.toggleButton {
+  background-color: #00000000;
+}
+
+.toggleButton:hover {
+  background-color: #00000000;
 }

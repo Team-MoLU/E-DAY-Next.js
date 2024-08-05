@@ -9,15 +9,32 @@
 .leftItems {
   display: flex;
   align-items: center;
+  padding-left: 20px;
+}
+
+.leftSearchItems {
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
 }
 
 .icon {
   margin-right: 20px;
 }
 
+.searchIcon {
+  margin-right: 8px;
+}
+
 .text {
   font-size: 18px;
   font-weight: 500;
+}
+
+.routeText {
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .rightItems {
@@ -80,4 +97,13 @@
 .buttonWrapper:hover .hintText {
   visibility: visible;
   opacity: 1;
+}
+
+.searchSection {
+  display: flex;
+  align-items: center;
+  background-color: #2a2a2a;
+  border-radius: 20px;
+  padding: 8px 12px;
+  flex-grow: 1;
 }

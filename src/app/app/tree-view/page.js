@@ -54,6 +54,7 @@ export default function TreeViewPage() {
         width: "100%",
         height: "100%",
         display: "flex",
+        paddingTop: "60px",
         flexDirection: "column",
         overflow: "none",
         position: "relative",

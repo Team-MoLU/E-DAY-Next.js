@@ -63,6 +63,33 @@ const updateTaskAtPath = (state, path, updatedTask) => {
     // Update task properties
     Object.assign(current, updatedTask);
   }
+
+  let taskDto = {
+    "taskId":current.id,
+    "name":current.name,
+    "memo":current.memo,
+    "startDate":current.startDate,
+    "endDate":current.endDate,
+    "priority": current.priority,
+    "check": current.check
+  };
+
+  taskDto.name = updatedTask.name;
+  taskDto.memo = updatedTask.memo;
+  taskDto.startDate = new Date(updatedTask.startDate);
+  taskDto.endDate = new Date(updatedTask.endDate);
+  taskDto.priority = updatedTask.priority;
+  taskDto.check = updatedTask.check;
+
+  axios.patch(`${DOMAIN_URI}/api/v1/tasks`, 
+    taskDto,
+    { "Content-Type": "application/json", withCredentials: true },
+    ).then((res) => {
+      console.log(res);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 const addTaskAtPath = (state, path, newTask) => {
@@ -76,6 +103,39 @@ const addTaskAtPath = (state, path, newTask) => {
   }
   if (!current.children) current.children = [];
   current.children.push(newTask);
+
+  let taskDto = {
+      "parentId":"",
+      "name":"",
+      "memo":"",
+      "startDate":"",
+      "endDate":"",
+      "priority": 1
+    };
+
+  if(current.id == "root"){
+    taskDto.parentId = "0";
+  }else{
+    taskDto.parentId = current.id;
+  }
+
+  taskDto.name = newTask.name;
+  taskDto.memo = newTask.memo;
+  taskDto.startDate = newTask.startDate;
+  taskDto.endDate = newTask.endDate;
+  taskDto.priority = newTask.priority;
+
+  axios.post(`${DOMAIN_URI}/api/v1/tasks`, 
+    taskDto,
+    { "Content-Type": "application/json", withCredentials: true },
+    ).then((res) => {
+      console.log(res);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
+  console.log(">>>>>>>>>>ADD TASK>>>>>>>>>>");
 };
 
 const deleteTaskAtPath = (state, path) => {
@@ -94,6 +154,23 @@ const deleteTaskAtPath = (state, path) => {
   if (parent && indexToDelete !== null) {
     parent.children.splice(indexToDelete, 1);
   }
+
+  let taskDto ={
+    "taskId":"",
+    "cascade":true
+  };
+
+  taskDto.taskId = current.id;
+
+  axios.post(`${DOMAIN_URI}/api/v1/tasks/delete`, 
+    taskDto,
+    { "Content-Type": "application/json", withCredentials: true },
+    ).then((res) => {
+      console.log(res);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 const orderChildren = (children, fromIndex, toIndex) => {

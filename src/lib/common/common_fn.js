@@ -128,9 +128,7 @@ const common = {
   },
 
   // 특정 색상에서 더 연한 색을 얻어내는 함수
-  getLighterColorFromUuid: function getLighterColorFromUuid(uuid, amount = 20) {
-    const color = this.getColorFromUuid(uuid);
-
+  getLighterColor: function getLighterColor(color, amount = 20) {
     if (color.startsWith("hsl")) {
       const [hue, saturation, lightness] = color.match(/\d+/g).map(Number);
 

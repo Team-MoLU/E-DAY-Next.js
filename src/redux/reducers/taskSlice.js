@@ -186,6 +186,7 @@ const taskSlice = createSlice({
     ...initialState,
     selectedTask: null,
     selectedArchive: null,
+    selectedTrash: null,
     exploredTask: null,
   },
 
@@ -214,6 +215,10 @@ const taskSlice = createSlice({
     // (Tree에서) archive 선택 시 선택된 archive 저장
     setSelectedArchiveTask: (state, action) => {
       state.selectedArchive = action.payload;
+    },
+    // (Tree에서) trash 선택 시 선택된 trash 저장
+    setSelectedTrashTask: (state, action) => {
+      state.selectedTrash = action.payload;
     },
     // (Explore에서) task 선택 시 선택된 task 저장
     setExploredTask: (state, action) => {
@@ -303,6 +308,7 @@ const taskSlice = createSlice({
 export const {
   setSelectedTask,
   setSelectedArchiveTask,
+  setSelectedTrashTask,
   setExploredTask,
   handleNodeClick,
   addTask,

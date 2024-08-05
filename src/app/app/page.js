@@ -10,12 +10,14 @@ import {
   setSelectedTask,
   updateTask,
 } from "@/redux/reducers/taskSlice";
-import { setSidebarContent, toggleSidebar } from "@/redux/reducers/uiSlice";
 import Sidebar from "../../components/Sidebar";
 import { v4 as uuidv4 } from "uuid";
 import { useDrop } from "react-dnd";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { setMenu } from "@/redux/reducers/menuSlice";
+import Icon from "../../components/Icon";
+import common from "@/lib/common/common_fn";
 
 export default function HomePage() {
   // task data 관련
@@ -34,6 +36,11 @@ export default function HomePage() {
 
   console.log("data::");
   console.log(data);
+  const primaryColor = useSelector((state) => state.theme.primaryColor);
+
+  useEffect(() => {
+    dispatch(setMenu("home"));
+  }, []);
 
   // data 변경 시, today task list refresh
   useEffect(() => {
@@ -148,7 +155,7 @@ export default function HomePage() {
         })
       );
     },
-    [data.name, dispatch]
+    [data, dispatch]
   );
 
   const [, drop] = useDrop(
@@ -177,40 +184,8 @@ export default function HomePage() {
         }}
       >
         <div className="main-view-content">
-          {/* 리스트뷰 버튼 */}
-          <button
-            onClick={() => {
-              router.push(`app/task/`);
-            }}
-          >
-            리스트뷰
-          </button>
-          {/* 트리뷰 버튼 */}
-          <button
-            onClick={() => {
-              router.push(`app/tree-view/`);
-            }}
-          >
-            트리뷰
-          </button>
-          {/* 탐색 버튼 */}
-          <button
-            onClick={() => {
-              dispatch(setSidebarContent("explore"));
-              // side view가 꺼져있으면 켜기
-              if (sidebarIsOpen === false) {
-                dispatch(toggleSidebar());
-              }
-              // side view 가 켜져있고, 이미 explore 이면, 끄기
-              else if (sidebarActiveContent === "explore") {
-                dispatch(toggleSidebar());
-              }
-            }}
-          >
-            탐색
-          </button>
           <div>
-            <h1>오늘 할 일</h1>
+            <h1 className="title">오늘 할 일</h1>
             {/* 오늘 할 일의 List */}
             <ul>
               {todayTaskList.map((task, index) => (
@@ -221,29 +196,56 @@ export default function HomePage() {
                     handleTodayTaskDoubleClick(task);
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={task.check}
-                    onClick={(e) => e.stopPropagation()}
-                    onDoubleClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      toggleTodayTaskCheck(task);
-                    }}
-                  />
-                  <span>{task.name}</span>
+                  <div className="task-leftItem">
+                    <button
+                      className="toggleButton"
+                      onDoubleClick={(e) => e.stopPropagation()}
+                      onClick={() => {
+                        toggleTodayTaskCheck(task);
+                      }}
+                    >
+                      {task.check === true ? (
+                        <Icon name="check" size={28} color={primaryColor} />
+                      ) : (
+                        <Icon name="uncheck" size={28} color="#585D6A" />
+                      )}
+                    </button>
+                    <span>{task.name}</span>
+                  </div>
+                  <span className="task-rightItem">
+                    {common.findRouteById(task.id, data).map((r, index) => (
+                      <span key={"r" + index}>
+                        {index == 0 ? "" : "/"}
+                        <span>{index == 0 ? "할 일" : r.name}</span>
+                      </span>
+                    ))}
+                  </span>
                 </li>
               ))}
             </ul>
+            <div className="pt-40"></div>
             {/* 새로운 할 일 추가 UI */}
-            <form onSubmit={handleAddTask}>
-              <input
-                type="text"
-                value={newTaskName}
-                onChange={(e) => setNewTaskName(e.target.value)}
-                placeholder="새로운 오늘 할 일"
-              />
-              <button type="submit">추가</button>
-            </form>
+            <div
+              className="inputSection"
+              style={{
+                right: sidebarIsOpen
+                  ? `calc(40px + ${sidebarWidth}px)`
+                  : "40px",
+              }}
+            >
+              <form onSubmit={handleAddTask} className="form">
+                <input
+                  type="text"
+                  value={newTaskName}
+                  className="inputField"
+                  onChange={(e) => setNewTaskName(e.target.value)}
+                  placeholder="할 일을 입력하세요"
+                />
+                <button type="submit" className="addButton">
+                  <Icon name="add" size={24} />
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

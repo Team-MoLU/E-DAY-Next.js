@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setTreeFilter, toggleTreeFilter } from "@/redux/reducers/uiSlice";
 import { useRouter } from "next/navigation";
-import styles from "./TreeviewTopbar.module.css";
+import styles from "./Topbar.module.css";
 import Icon from "@/components/Icon";
 
 export const TreeviewTopbar = () => {

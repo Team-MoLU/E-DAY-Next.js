@@ -5,6 +5,8 @@ import { setMenu, setSearchString } from "@/redux/reducers/menuSlice";
 import { toggleSidebar, setSidebarContent } from "@/redux/reducers/uiSlice";
 import { useRouter } from "next/navigation";
 import common from "@/lib/common/common_fn";
+import styles from "./Topbar.module.css";
+import Icon from "@/components/Icon";
 import { getTaskByPath, setSelectedTask } from "@/redux/reducers/taskSlice";
 
 export const HomeTopbar = () => {
@@ -53,7 +55,7 @@ export const HomeTopbar = () => {
     // route update
     const newRoute = common.findRouteById(currentTaskId, data);
     setRoute(newRoute);
-  }, [data]);
+  }, [selectedTask, data]);
 
   // selectedTask 변경 시,
   useEffect(() => {
@@ -64,7 +66,7 @@ export const HomeTopbar = () => {
 
     // 이동하면 search 끄기
     setIsSearching(false);
-  }, [selectedTask]);
+  }, [selectedTask, data]);
 
   const handleRouteClick = (id) => {
     const newPath = common.findNodePathById(id, data);
@@ -78,60 +80,86 @@ export const HomeTopbar = () => {
   };
 
   return (
-    <div>
-      {activeContent === "home" && <h1>오늘 할 일</h1>}
+    <div className={styles.topbar}>
+      {activeContent === "home" && (
+        <div className={styles.leftItems}>
+          <div className={styles.icon}>
+            <Icon name="home" size={24} />
+          </div>
+          <h1 className={styles.text}>오늘 할 일</h1>
+        </div>
+      )}
       {activeContent === "list-view" && (
         <>
           {/* 검색 토글 버튼 */}
-          <span onClick={toggleSearching}>검색</span>
-          {isSearching && (
-            <input
-              type="text"
-              name="search"
-              className="w-full p-2 rounded"
-              value={searchString}
-              onChange={(e) => dispatch(setSearchString(e.target.value))}
-              placeholder={selectedTask.name + " 검색"}
-            />
-          )}
-          {/* 경로 */}
-          {!isSearching && (
-            <div>
-              <span>경로: </span>
-              {route.map((r, index) => (
-                <span key={"r" + index}>
-                  {" / "}
-                  <span
-                    style={{ cursor: "pointer", color: "blue" }}
-                    onClick={() => handleRouteClick(r.id)}
-                  >
-                    {r.name}
-                  </span>
-                </span>
-              ))}
+          <div className={styles.leftSearchItems}>
+            <div className={styles.searchIcon}>
+              <button className={styles.button} onClick={toggleSearching}>
+                <Icon name="search" size={24} />
+              </button>
             </div>
-          )}
+            {isSearching && (
+              <input
+                type="text"
+                name="search"
+                className={styles.searchSection}
+                value={searchString}
+                onChange={(e) => dispatch(setSearchString(e.target.value))}
+                placeholder={selectedTask.name + " 검색"}
+              />
+            )}
+            {/* 경로 */}
+            {!isSearching && (
+              <div>
+                {route.map((r, index) => (
+                  <span className={styles.text} key={"r" + index}>
+                    {index == 0 ? "" : " / "}
+                    <span
+                      className={styles.routeText}
+                      onClick={() => handleRouteClick(r.id)}
+                    >
+                      {index == 0 ? "할 일" : r.name}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </>
       )}
-      <button onClick={handleTreeviewButtonClick}>트리뷰</button>
-      {/* activeContent === "list-view"이면, button 배경 다르게 */}
-      <button
-        onClick={handleListviewButtonClick}
-        style={{
-          backgroundColor:
-            activeContent === "list-view" ? "lightblue" : "#007bff",
-        }}
-      >
-        리스트뷰
-      </button>
-      <button
-        onClick={handleSidebarButtonClick}
-        style={{
-          backgroundColor: sidebarIsOpen === true ? "lightblue" : "#007bff",
-        }}
-      >
-        탐색
-      </button>
+      <div className={styles.rightItems}>
+        <div className={styles.buttonWrapper}>
+          <button className={styles.button} onClick={handleTreeviewButtonClick}>
+            <Icon name="treeview" size={24} />
+          </button>
+          <span className={styles.hintText}>트리뷰</span>
+        </div>
+        {/* activeContent === "list-view"이면, button 배경 다르게 */}
+        <div className={styles.buttonWrapper}>
+          <button
+            className={`${styles.toggleButton} ${
+              activeContent == "list-view" ? styles.active : ""
+            }`}
+            onClick={handleListviewButtonClick}
+          >
+            <Icon name="list" size={24} />
+          </button>
+          <span className={styles.hintText}>
+            {activeContent === "list-view" ? "오늘 할 일" : "리스트 뷰"}
+          </span>
+        </div>
+        <div className={styles.buttonWrapper}>
+          <button
+            className={`${styles.toggleButton} ${
+              sidebarIsOpen === true ? styles.active : ""
+            }`}
+            onClick={handleSidebarButtonClick}
+          >
+            <Icon name="sidebar" size={24} />
+          </button>
+          <span className={styles.hintText}>탐색</span>
+        </div>
+      </div>
     </div>
   );
 };
